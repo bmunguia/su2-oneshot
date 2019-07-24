@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
   
   unsigned short nZone;
   char config_file_name[MAX_STRING_SIZE];
-  bool fsi, turbo, zone_specific;
+  bool fsi, turbo, zone_specific, oneshot;
   
   /*--- MPI initialization, and buffer setting ---*/
   
@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
     if (config->GetDiscrete_Adjoint() && !oneshot)
        driver = new CDiscAdjSinglezoneDriver(config_file_name, nZone, MPICommunicator);
     else if(config->GetDiscrete_Adjoint() && oneshot)
-       driver = new COneShotFluidDriver(config_file_name, nZone, nDim, MPICommunicator);
+       driver = new COneShotFluidDriver(config_file_name, nZone, MPICommunicator);
     else
        driver = new CSinglezoneDriver(config_file_name, nZone, MPICommunicator);
 

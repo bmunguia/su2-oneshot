@@ -51,6 +51,8 @@ private:
   su2double* Solution_Direct;
   su2double* DualTime_Derivative;
   su2double* DualTime_Derivative_n;
+  su2double* Sensitivity_ShiftedLagrangian; /* Vector holding the sensitivity of the shifted Lagrangian to the coordinates at this node*/
+  su2double* Sensitivity_AugmentedLagrangian; /* Vector holding the sensitivity of the augmented Lagrangian to the coordinates at this node*/
 
   su2double* Cross_Term_Derivative;
   su2double* Geometry_CrossTerm_Derivative;
@@ -246,6 +248,15 @@ public:
    * \brief Get the contribution of crossed terms into the derivative.
    */
   inline su2double GetCross_Term_Derivative(unsigned short iVar) {return Cross_Term_Derivative[iVar]; }
+
+  inline void SetSensitivity_ShiftedLagrangian(unsigned short iDim, su2double val) {Sensitivity_ShiftedLagrangian[iDim] = val;}
+
+  inline void SetSensitivity_AugmentedLagrangian(unsigned short iDim, su2double val) {Sensitivity_AugmentedLagrangian[iDim] = val;}
+
+  inline su2double GetSensitivity_ShiftedLagrangian(unsigned short iDim) { return Sensitivity_ShiftedLagrangian[iDim];}
+
+  inline su2double GetSensitivity_AugmentedLagrangian(unsigned short iDim) { return Sensitivity_AugmentedLagrangian[iDim];}
+
 
 };
 

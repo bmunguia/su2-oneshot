@@ -298,6 +298,56 @@ public:
   inline void SetSolutionZero(unsigned short val_var) {Solution[val_var] = 0.0;}
 
   /*!
+   * \brief Set stored variables to the solution.
+   */
+  inline void Set_StoreSolution() {
+
+    for (unsigned short iVar = 0; iVar < nVar; iVar++)
+      Solution_Store[iVar] = Solution[iVar];
+
+  }
+
+  /*!
+   * \brief Set saved variables to the solution.
+   */
+  inline void Set_SaveSolution() {
+
+    for (unsigned short iVar = 0; iVar < nVar; iVar++)
+      Solution_Save[iVar] = Solution[iVar];
+
+  }
+
+  /*!
+   * \brief Set former variables to the solution.
+   */
+  inline void Set_FormerSolution() {
+
+    for (unsigned short iVar = 0; iVar < nVar; iVar++)
+      Solution_Former[iVar] = Solution[iVar];
+
+  }
+
+  /*!
+   * \brief Set former variables to the old solution.
+   */
+  inline void SetSolution_Former(su2double *val_solution_old) {
+
+    for (unsigned short iVar = 0; iVar < nVar; iVar++)
+      Solution_Former[iVar] = val_solution_old[iVar];
+
+  }
+
+  /*!
+   * \brief Set stored variables to the old solution.
+   */
+  inline void SetSolution_Store(su2double *val_solution_old) {
+
+    for (unsigned short iVar = 0; iVar < nVar; iVar++)
+      Solution_Store[iVar] = val_solution_old[iVar];
+
+  }
+
+  /*!
    * \brief Add a value to the solution.
    * \param[in] val_var - Number of the variable.
    * \param[in] val_solution - Value that we want to add to the solution.
@@ -2539,4 +2589,11 @@ public:
 
   inline su2double GetSolution_Delta_Store(unsigned short iVar) { return Solution_Delta_Store[iVar]; }
 
+  inline virtual void SetSensitivity_ShiftedLagrangian(unsigned short iDim, su2double val) {}
+
+  inline virtual void SetSensitivity_AugmentedLagrangian(unsigned short iDim, su2double val) {}
+
+  inline virtual su2double GetSensitivity_ShiftedLagrangian(unsigned short iDim) { return 0.0; }
+
+  inline virtual su2double GetSensitivity_AugmentedLagrangian(unsigned short iDim) { return 0.0; }
 };

@@ -1425,10 +1425,10 @@ void CDriver::Solver_Preprocessing(CSolver ****solver_container, CGeometry ***ge
     }
 
     if (config->GetBoolOneShot()) {
-      solver_container[iMGlevel][ADJFLOW_SOL] = new COneShotSolver(geometry[val_iInst][iMGlevel], config, solver_container[val_iInst][iMGlevel][FLOW_SOL], RUNTIME_FLOW_SYS, iMGlevel);
+      solver_container[val_iInst][iMGlevel][ADJFLOW_SOL] = new COneShotSolver(geometry[val_iInst][iMGlevel], config, solver_container[val_iInst][iMGlevel][FLOW_SOL], RUNTIME_FLOW_SYS, iMGlevel);
       if (iMGlevel == MESH_0) DOFsPerPoint += solver_container[val_iInst][iMGlevel][ADJFLOW_SOL]->GetnVar();
       if (disc_adj_turb) {
-        solver_container[iMGlevel][ADJTURB_SOL] = new COneShotSolver(geometry[val_iInst][iMGlevel], config, solver_container[val_iInst][iMGlevel][TURB_SOL], RUNTIME_TURB_SYS, iMGlevel);
+        solver_container[val_iInst][iMGlevel][ADJTURB_SOL] = new COneShotSolver(geometry[val_iInst][iMGlevel], config, solver_container[val_iInst][iMGlevel][TURB_SOL], RUNTIME_TURB_SYS, iMGlevel);
         if (iMGlevel == MESH_0) DOFsPerPoint += solver_container[val_iInst][iMGlevel][ADJTURB_SOL]->GetnVar();
       }
 
@@ -3331,7 +3331,7 @@ void CDriver::Iteration_Preprocessing() {
     case ONE_SHOT_EULER: case ONE_SHOT_NAVIER_STOKES: case ONE_SHOT_RANS:
       if (rank==MASTER_NODE)
         cout << ": one-shot fluid iteration." << endl;
-      iteration_container[iZone] = new COneShotFluidIteration(config_container[iZone]);
+      iteration_container[iZone][iInst] = new COneShotFluidIteration(config_container[iZone]);
       break;
     }
 
@@ -7247,9 +7247,8 @@ void CMultiphysicsZonalDriver::Transfer_Data(unsigned short donorZone, unsigned 
 }
 
 COneShotFluidDriver::COneShotFluidDriver(char* confFile,
-                                                 unsigned short val_nZone,
-                                                 unsigned short val_nDim, bool val_periodic, SU2_Comm MPICommunicator) : CDiscAdjFluidDriver(confFile, val_nZone,
-                                                                                    val_nDim, val_periodic, MPICommunicator) {
+                                         unsigned short val_nZone,
+                                         SU2_Comm MPICommunicator) : CDiscAdjSinglezoneDriver(confFile, val_nZone, MPICommunicator) {
   unsigned short iDV, jDV, iDV_Value;
 
   /*---------- One-shot works on all design variables - find total number of design variables ---------*/
@@ -7335,7 +7334,7 @@ COneShotFluidDriver::COneShotFluidDriver(char* confFile,
   cwolfeone= 1E-4*config_container[ZONE_0]->GetDesignScale(); //Achtung: vorher nicht auskommentiert
 
   for (unsigned short iZone = 0; iZone < nZone; iZone++){
-    grid_movement[iZone] = new CVolumetricMovement(geometry_container[iZone][MESH_0], config_container[iZone]);
+    grid_movement[iZone][INST_0] = new CVolumetricMovement(geometry_container[iZone][INST_0][MESH_0], config_container[iZone]);
     surface_movement[iZone] = new CSurfaceMovement();
   }
 
@@ -7368,13 +7367,6 @@ COneShotFluidDriver::~COneShotFluidDriver(void){
   delete [] multiplier;
   delete [] ConstrFunc_Store;
 
-  for (unsigned short iZone = 0; iZone < nZone; iZone++){
-    delete [] grid_movement[iZone];
-    delete [] surface_movement[iZone];
-  }
-  delete [] grid_movement;
-  delete [] surface_movement;
-
   for (unsigned short iBFGS = 0; iBFGS < nBFGSmax; iBFGS++){
     delete [] ykvec[iBFGS];
     delete [] skvec[iBFGS];
@@ -7392,14 +7384,14 @@ void COneShotFluidDriver::RunOneShot(){
   bool testLagrange = config_container[ZONE_0]->GetOneShotLagrange(); //Lagrange function includes all updates and not only design update if testLagrange is set to false
   bool descent = true;
   bool partstep = config_container[ZONE_0]->GetOneShotPartStep();
-  cout << "log10Adjoint[RMS Density]: " << log10(solver_container[ZONE_0][MESH_0][ADJFLOW_SOL]->GetRes_RMS(0))<<std::endl;
-  cout << "log10Primal[RMS Density]: " << log10(solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(0))<<std::endl;
+  cout << "log10Adjoint[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->GetRes_RMS(0))<<std::endl;
+  cout << "log10Primal[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetRes_RMS(0))<<std::endl;
 
   /*--- Store the old solution and the old design for line search ---*/
   for (iZone = 0; iZone < nZone; iZone++){
-    if(!testLagrange) solver_container[iZone][MESH_0][ADJFLOW_SOL]->StoreSolution();
-    if(testLagrange) solver_container[iZone][MESH_0][ADJFLOW_SOL]->StoreFormerSolution();
-    solver_container[iZone][MESH_0][ADJFLOW_SOL]->StoreMeshPoints(config_container[iZone], geometry_container[iZone][MESH_0]);
+    if(!testLagrange) solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreSolution();
+    if(testLagrange) solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreFormerSolution();
+    solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreMeshPoints(config_container[iZone], geometry_container[iZone][INST_0][MESH_0]);
   }
   /*--- This is the line search loop that is only called once, if no update is performed ---*/
   do{
@@ -7418,7 +7410,7 @@ void COneShotFluidDriver::RunOneShot(){
         }
         /*---Load the old design for line search---*/
         for (iZone = 0; iZone < nZone; iZone++){
-          solver_container[iZone][MESH_0][ADJFLOW_SOL]->LoadMeshPoints(config_container[iZone], geometry_container[iZone][MESH_0]);
+          solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadMeshPoints(config_container[iZone], geometry_container[iZone][INST_0][MESH_0]);
         }
       }else{
         if(!testLagrange && !partstep && config_container[ZONE_0]->GetnConstr()>0) UpdateMultiplier(1.0);
@@ -7427,13 +7419,13 @@ void COneShotFluidDriver::RunOneShot(){
       if(!partstep||(whilecounter==0)){
         //Load the old solution for line search (either y_k or y_k-1)
         for (iZone = 0; iZone < nZone; iZone++){
-          solver_container[iZone][MESH_0][ADJFLOW_SOL]->LoadSolution();
+          solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadSolution();
         }
       }else{
         //Update the old solution with stepsize and load it
         for (iZone = 0; iZone < nZone; iZone++){
-          solver_container[iZone][MESH_0][ADJFLOW_SOL]->LoadSolutionStep(stepsize);
-          solver_container[iZone][MESH_0][ADJFLOW_SOL]->StoreSolution();
+          solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadSolutionStep(stepsize);
+          solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreSolution();
         }
       }
       /*--- Do a design update based on the search direction (mesh deformation with stepsize) ---*/
@@ -7441,7 +7433,7 @@ void COneShotFluidDriver::RunOneShot(){
       else ComputeDesignVarUpdate(0.0);
       for (iZone = 0; iZone < nZone; iZone++){
         config_container[iZone]->SetKind_SU2(2); // set SU2_DEF as the solver
-        SurfaceDeformation(geometry_container[iZone][MESH_0], config_container[iZone], surface_movement[iZone], grid_movement[iZone]);
+        SurfaceDeformation(geometry_container[iZone][INST_0][MESH_0], config_container[iZone], surface_movement[iZone], grid_movement[iZone][INST_0]);
         config_container[iZone]->SetKind_SU2(1); // set SU2_CFD as the solver
       }
     }
@@ -7465,38 +7457,38 @@ void COneShotFluidDriver::RunOneShot(){
       //Evaluate sensitivity of augmented Lagrangian for an update only in the design
       /*--- N_u ---*/
       for (iZone = 0; iZone < nZone; iZone++){
-        solver_container[iZone][MESH_0][ADJFLOW_SOL]->ResetSensitivityLagrangian(geometry_container[iZone][MESH_0]);
-        solver_container[iZone][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][MESH_0],1.0);
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->ResetSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0]);
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],1.0);
       }
 
       /*--- Alpha*Deltay^T*G_u ---*/
       ComputeAlphaTerm();
       for (iZone = 0; iZone < nZone; iZone++){
-        solver_container[iZone][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][MESH_0],config_container[iZone]->GetOneShotAlpha());
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]->GetOneShotAlpha());
       }
 
       /*--- Beta*DeltaBary^T*N_yu ---*/
       for (iZone = 0; iZone < nZone; iZone++){
-        solver_container[iZone][MESH_0][ADJFLOW_SOL]->LoadSolution();
-        solver_container[iZone][MESH_0][ADJFLOW_SOL]->UpdateStateVariable(config_container[iZone]);
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadSolution();
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateStateVariable(config_container[iZone]);
       }
       ComputeBetaTerm();
       for (iZone = 0; iZone < nZone; iZone++){
-        solver_container[iZone][MESH_0][ADJFLOW_SOL]->SetFiniteDifferenceSens(geometry_container[iZone][MESH_0], config_container[iZone]);
-        solver_container[iZone][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][MESH_0],config_container[iZone]->GetOneShotBeta());
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SetFiniteDifferenceSens(geometry_container[iZone][INST_0][MESH_0], config_container[iZone]);
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]->GetOneShotBeta());
       }
 
       /*--- Projection of the gradient L_u---*/
       for (iZone = 0; iZone < nZone; iZone++){
-        solver_container[iZone][MESH_0][ADJFLOW_SOL]->SetGeometrySensitivityLagrangian(geometry_container[iZone][MESH_0]); //Lagrangian
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SetGeometrySensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0]); //Lagrangian
       }
       ProjectMeshSensitivities();
       SetAugmentedLagrangianGradient();
     }
 
     for (iZone = 0; iZone < nZone; iZone++){
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->ShiftFormerSolution();
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->LoadSolution();
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->ShiftFormerSolution();
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadSolution();
     }
     UpdateMultiplier(1.0);
     PrimalDualStep();
@@ -7504,8 +7496,8 @@ void COneShotFluidDriver::RunOneShot(){
   }
   if(partstep){
     for (iZone = 0; iZone < nZone; iZone++){
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->ShiftStoreSolution();
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->StoreSolutionDelta();
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->ShiftStoreSolution();
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreSolutionDelta();
     }
   }
   if(ExtIter>=config_container[ZONE_0]->GetOneShotStart()&&ExtIter<config_container[ZONE_0]->GetOneShotStop()){
@@ -7516,41 +7508,41 @@ void COneShotFluidDriver::RunOneShot(){
 
     /*--- N_u ---*/
     for (iZone = 0; iZone < nZone; iZone++){
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->SaveSensitivity(geometry_container[iZone][MESH_0]);
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->StoreSaveSolution();
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->ResetSensitivityLagrangian(geometry_container[iZone][MESH_0]);
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][MESH_0],1.0);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SaveSensitivity(geometry_container[iZone][INST_0][MESH_0]);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreSaveSolution();
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->ResetSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0]);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],1.0);
     }   
 
     if(config_container[ZONE_0]->GetnConstr()>0 && !config_container[ZONE_0]->GetConstPrecond()) ComputePreconditioner();
     /*--- Alpha*Deltay^T*G_u ---*/
     ComputeAlphaTerm();
     for (iZone = 0; iZone < nZone; iZone++){
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][MESH_0],config_container[iZone]->GetOneShotAlpha());
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]->GetOneShotAlpha());
     }
 
     /*--- Beta*DeltaBary^T*N_yu ---*/
     for (iZone = 0; iZone < nZone; iZone++){
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->LoadSolution();
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->UpdateStateVariable(config_container[iZone]);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadSolution();
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateStateVariable(config_container[iZone]);
     }
     ComputeBetaTerm();
     for (iZone = 0; iZone < nZone; iZone++){
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->SetFiniteDifferenceSens(geometry_container[iZone][MESH_0], config_container[iZone]);
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][MESH_0],config_container[iZone]->GetOneShotBeta());
-      if(!partstep) solver_container[iZone][MESH_0][ADJFLOW_SOL]->LoadSaveSolution();
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SetFiniteDifferenceSens(geometry_container[iZone][INST_0][MESH_0], config_container[iZone]);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]->GetOneShotBeta());
+      if(!partstep) solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadSaveSolution();
     }
 
     /*--- Projection of the gradient N_u---*/
     for (iZone = 0; iZone < nZone; iZone++){
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->SetGeometrySensitivityGradient(geometry_container[iZone][MESH_0]);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SetGeometrySensitivityGradient(geometry_container[iZone][INST_0][MESH_0]);
     }
     ProjectMeshSensitivities();
     SetShiftedLagrangianGradient();
 
     /*--- Projection of the gradient L_u---*/
     for (iZone = 0; iZone < nZone; iZone++){
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->SetGeometrySensitivityLagrangian(geometry_container[iZone][MESH_0]); //Lagrangian
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SetGeometrySensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0]); //Lagrangian
     }
     ProjectMeshSensitivities();
     if (!testLagrange){ SetAugmentedLagrangianGradient(); }
@@ -7585,10 +7577,10 @@ void COneShotFluidDriver::RunBFGS(){
   if(ExtIter>config_container[ZONE_0]->GetOneShotStart()){
       /*--- Store the old solution and the old design for line search ---*/
       for (iZone = 0; iZone < nZone; iZone++){
-        solver_container[iZone][MESH_0][ADJFLOW_SOL]->StoreSolution();
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreSolution();
       }
       for (iZone = 0; iZone < nZone; iZone++){
-        solver_container[iZone][MESH_0][ADJFLOW_SOL]->StoreMeshPoints(config_container[iZone], geometry_container[iZone][MESH_0]);
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreMeshPoints(config_container[iZone], geometry_container[iZone][INST_0][MESH_0]);
       }
   }
 
@@ -7596,10 +7588,10 @@ void COneShotFluidDriver::RunBFGS(){
     if(whilecounter>0){
       /*---Load the old solution and the old design for line search---*/
       for (iZone = 0; iZone < nZone; iZone++){
-        solver_container[iZone][MESH_0][ADJFLOW_SOL]->LoadSolution();
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadSolution();
       }
       for (iZone = 0; iZone < nZone; iZone++){
-        solver_container[iZone][MESH_0][ADJFLOW_SOL]->LoadMeshPoints(config_container[iZone], geometry_container[iZone][MESH_0]);
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadMeshPoints(config_container[iZone], geometry_container[iZone][INST_0][MESH_0]);
       }
     }
     if(ExtIter>config_container[ZONE_0]->GetOneShotStart()){
@@ -7607,7 +7599,7 @@ void COneShotFluidDriver::RunBFGS(){
       ComputeDesignVarUpdate(stepsize);
       for (iZone = 0; iZone < nZone; iZone++){
         config_container[iZone]->SetKind_SU2(2); // set SU2_DEF as the solver
-        SurfaceDeformation(geometry_container[iZone][MESH_0], config_container[iZone], surface_movement[iZone], grid_movement[iZone]);
+        SurfaceDeformation(geometry_container[iZone][INST_0][MESH_0], config_container[iZone], surface_movement[iZone], grid_movement[iZone][INST_0]);
         config_container[iZone]->SetKind_SU2(1); // set SU2_CFD as the solver
       }
     }
@@ -7615,8 +7607,8 @@ void COneShotFluidDriver::RunBFGS(){
       PrimalDualStep();
     }
     CalculateLagrangian(false);
-    cout << "log10Adjoint[RMS Density]: " << log10(solver_container[ZONE_0][MESH_0][ADJFLOW_SOL]->GetRes_RMS(0))<<std::endl;
-    cout << "log10Primal[RMS Density]: " << log10(solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(0))<<std::endl;
+    cout << "log10Adjoint[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->GetRes_RMS(0))<<std::endl;
+    cout << "log10Primal[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetRes_RMS(0))<<std::endl;
     stepsize=stepsize*0.5;
     whilecounter++;
   }
@@ -7629,8 +7621,8 @@ void COneShotFluidDriver::RunBFGS(){
       /*---N_u---*/
       /*--- Projection of the gradient ---*/
       for (iZone = 0; iZone < nZone; iZone++){
-        solver_container[iZone][MESH_0][ADJFLOW_SOL]->SaveSensitivity(geometry_container[iZone][MESH_0]);
-        solver_container[iZone][MESH_0][ADJFLOW_SOL]->SetGeometrySensitivityGradient(geometry_container[iZone][MESH_0]);
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SaveSensitivity(geometry_container[iZone][INST_0][MESH_0]);
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SetGeometrySensitivityGradient(geometry_container[iZone][INST_0][MESH_0]);
       }
       ProjectMeshSensitivities();
 
@@ -7650,6 +7642,7 @@ void COneShotFluidDriver::RunBFGS(){
 void COneShotFluidDriver::PrimalDualStep(){
 
   unsigned short iZone = 0;
+  unsigned short iInst = 0;
 
   /*--- Note: Unsteady cases not applicable to the one-shot method yet! ---*/
 
@@ -7662,7 +7655,7 @@ void COneShotFluidDriver::PrimalDualStep(){
 
     config_container[iZone]->SetIntIter(0);
 
-    iteration_container[iZone]->InitializeAdjoint(solver_container, geometry_container, config_container, iZone);
+    iteration_container[iZone][INST_0]->InitializeAdjoint(solver_container, geometry_container, config_container, iZone, iInst);
 
   }
 
@@ -7677,14 +7670,14 @@ void COneShotFluidDriver::PrimalDualStep(){
 
   /*--- Extract the computed adjoint values of the input variables and store them for the next iteration. ---*/
   for (iZone = 0; iZone < nZone; iZone++) {
-    iteration_container[iZone]->Iterate(output, integration_container, geometry_container,
+    iteration_container[iZone][INST_0]->Iterate(output, integration_container, geometry_container,
                                           solver_container, numerics_container, config_container,
-                                          surface_movement, grid_movement, FFDBox, iZone);
+                                          surface_movement, grid_movement, FFDBox, iZone, iInst);
   }
 
   /*--- Extract the computed sensitivity values. ---*/
   for (iZone = 0; iZone < nZone; iZone++) {
-    solver_container[iZone][MESH_0][ADJFLOW_SOL]->SetSensitivity(geometry_container[iZone][MESH_0],config_container[iZone]);
+    solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SetSensitivity(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]);
   }
 
   /*--- Clear the stored adjoint information to be ready for a new evaluation. ---*/
@@ -7698,15 +7691,15 @@ void COneShotFluidDriver::RunPiggyBack() {
 
   PrimalDualStep();
 
-  cout << "log10Adjoint[RMS Density]: " << log10(solver_container[ZONE_0][MESH_0][ADJFLOW_SOL]->GetRes_RMS(0))<<std::endl;
-  cout << "log10Primal[RMS Density]: " << log10(solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(0))<<std::endl;
+  cout << "log10Adjoint[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->GetRes_RMS(0))<<std::endl;
+  cout << "log10Primal[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetRes_RMS(0))<<std::endl;
 
   if(ExtIter>config_container[ZONE_0]->GetOneShotStart()){
 
     /*---N_u---*/
     for (iZone = 0; iZone < nZone; iZone++){
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->SaveSensitivity(geometry_container[iZone][MESH_0]);
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->SetGeometrySensitivityGradient(geometry_container[iZone][MESH_0]);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SaveSensitivity(geometry_container[iZone][INST_0][MESH_0]);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SetGeometrySensitivityGradient(geometry_container[iZone][INST_0][MESH_0]);
     }
     ProjectMeshSensitivities();
   }
@@ -7714,6 +7707,7 @@ void COneShotFluidDriver::RunPiggyBack() {
 
 void COneShotFluidDriver::SetRecording(unsigned short kind_recording){
   unsigned short iZone, iMesh;
+  unsigned short iInst = 0;
 
 #ifdef HAVE_MPI
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -7723,13 +7717,13 @@ void COneShotFluidDriver::SetRecording(unsigned short kind_recording){
 
   for (iZone = 0; iZone < nZone; iZone++) {
     for (iMesh = 0; iMesh <= config_container[iZone]->GetnMGLevels(); iMesh++){
-      solver_container[iZone][iMesh][ADJFLOW_SOL]->SetRecording(geometry_container[iZone][iMesh], config_container[iZone]);
+      solver_container[iZone][INST_0][iMesh][ADJFLOW_SOL]->SetRecording(geometry_container[iZone][INST_0][iMesh], config_container[iZone]);
     }
     if (config_container[iZone]->GetKind_Solver() == DISC_ADJ_RANS && !config_container[iZone]->GetFrozen_Visc_Disc()) {
-      solver_container[iZone][MESH_0][ADJTURB_SOL]->SetRecording(geometry_container[iZone][MESH_0], config_container[iZone]);
+      solver_container[iZone][INST_0][MESH_0][ADJTURB_SOL]->SetRecording(geometry_container[iZone][INST_0][MESH_0], config_container[iZone]);
     }
     if (config_container[iZone]->GetKind_Solver() == ONE_SHOT_RANS && !config_container[iZone]->GetFrozen_Visc_Disc()) {
-      solver_container[iZone][MESH_0][ADJTURB_SOL]->SetRecording(geometry_container[iZone][MESH_0], config_container[iZone]);
+      solver_container[iZone][INST_0][MESH_0][ADJTURB_SOL]->SetRecording(geometry_container[iZone][INST_0][MESH_0], config_container[iZone]);
     }
   }
 
@@ -7740,23 +7734,23 @@ void COneShotFluidDriver::SetRecording(unsigned short kind_recording){
 
     AD::StartRecording();
     for (iZone = 0; iZone < nZone; iZone++) {
-      iteration_container[iZone]->RegisterInput(solver_container, geometry_container, config_container, iZone, kind_recording);
+      iteration_container[iZone][INST_0]->RegisterInput(solver_container, geometry_container, config_container, iZone, iInst, kind_recording);
     }
 
   }
 
   for (iZone = 0; iZone < nZone; iZone++) {
-    iteration_container[iZone]->SetDependencies(solver_container, geometry_container, config_container, iZone, kind_recording);
+    iteration_container[iZone][INST_0]->SetDependencies(solver_container, geometry_container, numerics_container, config_container, iZone, iInst, kind_recording);
   }
 
   /*--- Do one iteration of the direct flow solver ---*/
 
-  DirectRun();
+  DirectRun(kind_recording);
 
   RecordingState = kind_recording;
 
   for (iZone = 0; iZone < nZone; iZone++) {
-    iteration_container[iZone]->RegisterOutput(solver_container, geometry_container, config_container, output, iZone);
+    iteration_container[iZone][INST_0]->RegisterOutput(solver_container, geometry_container, config_container, output, iZone, iInst);
   }
 
   /*--- Extract the objective function and store it --- */
@@ -8440,7 +8434,7 @@ void COneShotFluidDriver::CalculateLagrangian(bool augmented){
     }
     Lagrangian += helper*(config_container[ZONE_0]->GetOneShotAlpha()/2);
     for (iZone = 0; iZone < nZone; iZone++) {
-      Lagrangian+=solver_container[iZone][MESH_0][ADJFLOW_SOL]->CalculateLagrangianPart(config_container[iZone], augmented);
+      Lagrangian+=solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->CalculateLagrangianPart(config_container[iZone], augmented);
     }
   }
 }
@@ -8506,6 +8500,7 @@ void COneShotFluidDriver::SetAugmentedLagrangianGradient(){
 
 void COneShotFluidDriver::ComputeAlphaTerm(){
     unsigned short iZone;
+    unsigned short iInst = 0;
 
     /*--- Note: Not applicable for unsteady code ---*/
 
@@ -8515,7 +8510,7 @@ void COneShotFluidDriver::ComputeAlphaTerm(){
     for (iZone = 0; iZone < nZone; iZone++) {
 
       config_container[iZone]->SetIntIter(0);
-      iteration_container[iZone]->InitializeAdjoint_Update(solver_container, geometry_container, config_container, iZone);
+      iteration_container[iZone][INST_0]->InitializeAdjoint_Update(solver_container, geometry_container, config_container, iZone, iInst);
 
     }
 
@@ -8530,14 +8525,14 @@ void COneShotFluidDriver::ComputeAlphaTerm(){
 
     /*--- Extract the computed adjoint values of the input variables and store them for the next iteration. ---*/
     for (iZone = 0; iZone < nZone; iZone++) {
-      iteration_container[iZone]->Iterate_No_Residual(output, integration_container, geometry_container,
+      iteration_container[iZone][INST_0]->Iterate_No_Residual(output, integration_container, geometry_container,
                                             solver_container, numerics_container, config_container,
-                                            surface_movement, grid_movement, FFDBox, iZone);
+                                            surface_movement, grid_movement, FFDBox, iZone, iInst);
     }
 
     /*--- Extract the computed sensitivity values. ---*/
     for (iZone = 0; iZone < nZone; iZone++) {
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->SetSensitivity(geometry_container[iZone][MESH_0],config_container[iZone]);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SetSensitivity(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]);
     }
 
     /*--- Clear the stored adjoint information to be ready for a new evaluation. ---*/
@@ -8548,6 +8543,8 @@ void COneShotFluidDriver::ComputeAlphaTerm(){
 }
 
 void COneShotFluidDriver::ComputePreconditioner(){
+
+  unsigned short iInst = 0;
 
   unsigned short iConstr, jConstr;
   unsigned short nConstr = config_container[ZONE_0]->GetnConstr();
@@ -8569,7 +8566,7 @@ void COneShotFluidDriver::ComputePreconditioner(){
 
     for (iZone = 0; iZone < nZone; iZone++) {
       config_container[iZone]->SetIntIter(0);
-      iteration_container[iZone]->InitializeAdjoint_Zero(solver_container, geometry_container, config_container, iZone);
+      iteration_container[iZone][INST_0]->InitializeAdjoint_Zero(solver_container, geometry_container, config_container, iZone, iInst);
     }
 
     /*--- Initialize the adjoint of the objective function with 0.0. ---*/
@@ -8583,13 +8580,13 @@ void COneShotFluidDriver::ComputePreconditioner(){
 
     /*--- Extract the computed adjoint values of the input variables and store them for the next iteration. ---*/
     for (iZone = 0; iZone < nZone; iZone++) {
-      iteration_container[iZone]->Iterate_No_Residual(output, integration_container, geometry_container,
+      iteration_container[iZone][INST_0]->Iterate_No_Residual(output, integration_container, geometry_container,
                                           solver_container, numerics_container, config_container,
-                                          surface_movement, grid_movement, FFDBox, iZone);
+                                          surface_movement, grid_movement, FFDBox, iZone, iInst);
     }
 
     for (iZone = 0; iZone < nZone; iZone++) {
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->SetConstrDerivative(iConstr);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SetConstrDerivative(iConstr);
     }
 
 
@@ -8604,7 +8601,7 @@ void COneShotFluidDriver::ComputePreconditioner(){
     BCheck[iConstr][iConstr]=config_container[ZONE_0]->GetBCheckEpsilon();
     for (jConstr = 0; jConstr  < nConstr; jConstr++){
       for (iZone = 0; iZone < nZone; iZone++) {
-        BCheck[iConstr][jConstr]+=config_container[ZONE_0]->GetOneShotBeta()*solver_container[iZone][MESH_0][ADJFLOW_SOL]->MultiplyConstrDerivative(iConstr,jConstr);
+        BCheck[iConstr][jConstr]+=config_container[ZONE_0]->GetOneShotBeta()*solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->MultiplyConstrDerivative(iConstr,jConstr);
       }
     }
   }
@@ -8632,6 +8629,7 @@ void COneShotFluidDriver::ComputePreconditioner(){
 
 void COneShotFluidDriver::ComputeBetaTerm(){
     unsigned short iZone = 0;
+    unsigned short iInst = 0;
 
     /*--- Note: Not applicable for unsteady code ---*/
 
@@ -8647,7 +8645,7 @@ void COneShotFluidDriver::ComputeBetaTerm(){
     for (iZone = 0; iZone < nZone; iZone++) {
 
       config_container[iZone]->SetIntIter(0);
-      iteration_container[iZone]->InitializeAdjoint(solver_container, geometry_container, config_container, iZone);
+      iteration_container[iZone][INST_0]->InitializeAdjoint(solver_container, geometry_container, config_container, iZone, iInst);
 
     }
     /*--- Initialize the adjoint of the objective function with 1.0. ---*/
@@ -8661,14 +8659,14 @@ void COneShotFluidDriver::ComputeBetaTerm(){
 
     /*--- Extract the computed adjoint values of the input variables and store them for the next iteration. ---*/
     for (iZone = 0; iZone < nZone; iZone++) {
-      iteration_container[iZone]->Iterate_No_Residual(output, integration_container, geometry_container,
+      iteration_container[iZone][INST_0]->Iterate_No_Residual(output, integration_container, geometry_container,
                                             solver_container, numerics_container, config_container,
-                                            surface_movement, grid_movement, FFDBox, iZone);
+                                            surface_movement, grid_movement, FFDBox, iZone, iInst);
     }
 
     /*--- Extract the computed sensitivity values. ---*/
     for (iZone = 0; iZone < nZone; iZone++) {
-      solver_container[iZone][MESH_0][ADJFLOW_SOL]->SetSensitivity(geometry_container[iZone][MESH_0],config_container[iZone]);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SetSensitivity(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]);
     }
 
     /*--- Clear the stored adjoint information to be ready for a new evaluation. ---*/
@@ -8686,15 +8684,15 @@ void COneShotFluidDriver::ProjectMeshSensitivities(){
   for (iZone = 0; iZone < nZone; iZone++){
     config_container[iZone]->SetKind_SU2(3); // set SU2_DOT as solver
     // get the dependency of the volumetric grid movement
-    grid_movement[iZone]->SetVolume_Deformation(geometry_container[iZone][MESH_0], config_container[iZone], false, true);
+    grid_movement[iZone][INST_0]->SetVolume_Deformation(geometry_container[iZone][INST_0][MESH_0], config_container[iZone], false, true);
   }
   for (iZone = 0; iZone < nZone; iZone++){
-    surface_movement[iZone]->CopyBoundary(geometry_container[iZone][MESH_0], config_container[iZone]);
+    surface_movement[iZone]->CopyBoundary(geometry_container[iZone][INST_0][MESH_0], config_container[iZone]);
     // project sensitivities (surface) on design variables
     if (config_container[iZone]->GetProjectionAD()){
-      SetProjection_AD(geometry_container[iZone][MESH_0], config_container[iZone], surface_movement[iZone] , Gradient);
+      SetProjection_AD(geometry_container[iZone][INST_0][MESH_0], config_container[iZone], surface_movement[iZone] , Gradient);
     }else{
-      SetProjection_FD(geometry_container[iZone][MESH_0], config_container[iZone], surface_movement[iZone] , Gradient);
+      SetProjection_FD(geometry_container[iZone][INST_0][MESH_0], config_container[iZone], surface_movement[iZone] , Gradient);
     }
 
     config_container[iZone]->SetKind_SU2(1); // set SU2_CFD as solver
@@ -8732,34 +8730,8 @@ void COneShotFluidDriver::SetConstrFunction(){
     ConstrFunc[iConstr] = 0.0;
 
     Kind_ConstrFunc = config_container[ZONE_0]->GetKind_ConstrFunc(iConstr);
-    if( Kind_ConstrFunc == AIRFOIL_AREA ) {
-        unsigned short iPlane = 0;
-        su2double *Plane_P0 = new su2double[3];
-        su2double *Plane_Normal = new su2double[3];
-        vector<su2double> *Xcoord_Airfoil = new vector<su2double>[1];
-        vector<su2double> *Ycoord_Airfoil = new vector<su2double>[1];
-        vector<su2double> *Zcoord_Airfoil = new vector<su2double>[1];
-        vector<su2double> *Variable_Airfoil = new vector<su2double>[1];
 
-        Plane_Normal[0] = 0.0;   Plane_P0[0] = 0.0;
-        Plane_Normal[1] = 1.0;   Plane_P0[1] = 0.0;
-        Plane_Normal[2] = 0.0;   Plane_P0[2] = 0.0;
-
-        geometry_container[ZONE_0][MESH_0]->ComputeAirfoil_Section(Plane_P0, Plane_Normal, -1E6, 1E6, -1E6, 1E6, -1E6, 1E6, NULL,
-                                                           Xcoord_Airfoil[iPlane], Ycoord_Airfoil[iPlane], Zcoord_Airfoil[iPlane],
-                                                           Variable_Airfoil[iPlane], true, config_container[ZONE_0]);
-        FunctionValue = geometry_container[ZONE_0][MESH_0]->Compute_Area(Plane_P0, Plane_Normal, config_container[ZONE_0], Xcoord_Airfoil[iPlane], Ycoord_Airfoil[iPlane], Zcoord_Airfoil[iPlane]);
-
-        delete [] Plane_P0;
-        delete [] Plane_Normal;
-        delete [] Xcoord_Airfoil;
-        delete [] Ycoord_Airfoil;
-        delete [] Zcoord_Airfoil;
-        delete [] Variable_Airfoil;
-
-    }else{
-        FunctionValue = solver_container[ZONE_0][MESH_0][FLOW_SOL]->Evaluate_ConstrFunc(config_container[ZONE_0], iConstr);
-    }
+    FunctionValue = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->Evaluate_ConstrFunc(config_container[ZONE_0], iConstr);
 
     ConstrFunc[iConstr] = config_container[ZONE_0]->GetConstraintScale(iConstr)*(config_container[ZONE_0]->GetConstraintTarget(iConstr) - FunctionValue);
 

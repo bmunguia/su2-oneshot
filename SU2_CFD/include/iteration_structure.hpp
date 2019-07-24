@@ -346,6 +346,30 @@ public:
                             unsigned short val_iInst,
                             unsigned short kind_recording) { }
 
+  virtual void InitializeAdjoint_Update(CSolver *****solver_container,
+                                        CGeometry**** geometry_container,
+                                        CConfig** config_container,
+                                        unsigned short iZone,
+                                        unsigned short iInst) { }
+
+  virtual void InitializeAdjoint_Zero(CSolver *****solver_container,
+                                      CGeometry**** geometry_container,
+                                      CConfig** config_container,
+                                      unsigned short iZone,
+                                      unsigned short iInst) { }
+
+  virtual void Iterate_No_Residual(COutput *output,
+                                   CIntegration ****integration_container,
+                                   CGeometry ****geometry_container,
+                                   CSolver *****solver_container,
+                                   CNumerics ******numerics_container,
+                                   CConfig **config_container,
+                                   CSurfaceMovement **surface_movement,
+                                   CVolumetricMovement ***grid_movement,
+                                   CFreeFormDefBox*** FFDBox,
+                                   unsigned short val_iZone,
+                                   unsigned short val_iInst) { }
+
 };
 
 
@@ -1984,10 +2008,11 @@ public:
    * \param[in] iZone - Index of the zone.
    * \param[in] kind_recording - Kind of recording, either FLOW_VARIABLES, COMBINED or GEOMETRY_VARIABLES
    */
-  void RegisterInput(CSolver ****solver_container,
-                     CGeometry*** geometry_container,
+  void RegisterInput(CSolver *****solver_container,
+                     CGeometry**** geometry_container,
                      CConfig** config_container,
                      unsigned short iZone,
+                     unsigned short iInst,
                      unsigned short kind_recording);
 
   /*!
@@ -1999,10 +2024,12 @@ public:
    * \param[in] iZone - Index of the zone.
    * \param[in] kind_recording - The kind of recording (geometry or flow).
    */
-  void SetDependencies(CSolver ****solver_container,
-                       CGeometry ***geometry_container,
+  void SetDependencies(CSolver *****solver_container,
+                       CGeometry ****geometry_container,
+                       CNumerics ******numerics_container,
                        CConfig **config_container,
                        unsigned short iZone,
+                       unsigned short iInst,
                        unsigned short kind_recording);
   /*!
    * \brief Registers all input variables of the fluid iteration. - The objective function is not set and
@@ -2012,10 +2039,11 @@ public:
    * \param[in] config_container - Definition of the particular problem.
    * \param[in] iZone - Index of the zone.
    */
-  void InitializeAdjoint_Update(CSolver ****solver_container,
-                         CGeometry*** geometry_container,
-                         CConfig** config_container,
-                         unsigned short iZone);
+  void InitializeAdjoint_Update(CSolver *****solver_container,
+                                CGeometry**** geometry_container,
+                                CConfig** config_container,
+                                unsigned short iZone,
+                                unsigned short iInst);
 
   /*!
    * \brief Registers all input variables of the fluid iteration. - Setting the adjoint output to zero
@@ -2024,10 +2052,11 @@ public:
    * \param[in] config_container - Definition of the particular problem.
    * \param[in] iZone - Index of the zone.
    */
-  void InitializeAdjoint_Zero(CSolver ****solver_container,
-                         CGeometry*** geometry_container,
-                         CConfig** config_container,
-                         unsigned short iZone);
+  void InitializeAdjoint_Zero(CSolver *****solver_container,
+                              CGeometry**** geometry_container,
+                              CConfig** config_container,
+                              unsigned short iZone,
+                              unsigned short iInst);
   /*!
    * \brief Perform a single iteration of the adjoint fluid system without calculating residuals.
    * \param[in] output - Pointer to the COutput class.
@@ -2041,13 +2070,14 @@ public:
    * \param[in] FFDBox - FFD FFDBoxes of the problem.
    */
   void Iterate_No_Residual(COutput *output,
-               CIntegration ***integration_container,
-               CGeometry ***geometry_container,
-               CSolver ****solver_container,
-               CNumerics *****numerics_container,
-               CConfig **config_container,
-               CSurfaceMovement **surface_movement,
-               CVolumetricMovement **grid_movement,
-               CFreeFormDefBox*** FFDBox,
-               unsigned short val_iZone);
+                           CIntegration ****integration_container,
+                           CGeometry ****geometry_container,
+                           CSolver *****solver_container,
+                           CNumerics ******numerics_container,
+                           CConfig **config_container,
+                           CSurfaceMovement **surface_movement,
+                           CVolumetricMovement ***grid_movement,
+                           CFreeFormDefBox*** FFDBox,
+                           unsigned short val_iZone,
+                           unsigned short val_iInst);
 };

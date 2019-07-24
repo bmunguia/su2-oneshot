@@ -1587,7 +1587,7 @@ public:
  * \author L. Kusch
  * \version 6.0.1 "Falcon"
  */
-class COneShotFluidDriver : public CDiscAdjFluidDriver {
+class COneShotFluidDriver : public CDiscAdjSinglezoneDriver {
 
 protected:
   unsigned short RecordingState; /*!< \brief The kind of recording the tape currently holds.*/
@@ -1631,11 +1631,9 @@ public:
     * \brief Constructor of the class.
     * \param[in] confFile - Configuration file name.
     * \param[in] val_nZone - Total number of zones.
-    * \param[in] val_nDim - Number of dimensions.
     */
   COneShotFluidDriver(char* confFile,
                    unsigned short val_nZone,
-                   unsigned short val_nDim,
                    SU2_Comm MPICommunicator);
 
   /*!
