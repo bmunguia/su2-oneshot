@@ -99,6 +99,15 @@ CDiscAdjSinglezoneDriver::CDiscAdjSinglezoneDriver(char* confFile,
     SecondaryVariables = MESH_COORDS;
     break;
 
+  case ONE_SHOT_EULER: case ONE_SHOT_NAVIER_STOKES: case ONE_SHOT_RANS:
+    if (rank == MASTER_NODE)
+      cout << "Direct iteration: Euler/Navier-Stokes/RANS equation (One-Shot)." << endl;
+    if (turbo) direct_iteration = new CTurboIteration(config);
+    else       direct_iteration = new CFluidIteration(config);
+    MainVariables = COMBINED;
+    SecondaryVariables = NONE;
+    break;
+
   }
 
 }
