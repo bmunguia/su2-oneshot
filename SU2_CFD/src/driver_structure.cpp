@@ -7394,12 +7394,11 @@ void COneShotFluidDriver::RunOneShot(){
     solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreMeshPoints(config_container[iZone], geometry_container[iZone][INST_0][MESH_0]);
   }
   /*--- This is the line search loop that is only called once, if no update is performed ---*/
-  while(ExtIter>config_container[ZONE_0]->GetOneShotStart() && ExtIter<config_container[ZONE_0]->GetOneShotStop() &&
-        (!CheckFirstWolfe()) && whilecounter<maxcounter+1){
+  do {
 
-    if(ExtIter>config_container[ZONE_0]->GetOneShotStart() && ExtIter<config_container[ZONE_0]->GetOneShotStop()){
+    if(TimeIter>config_container[ZONE_0]->GetOneShotStart() && TimeIter<config_container[ZONE_0]->GetOneShotStop()){
 
-      if(!CheckDescent()&&whilecounter==0&&config_container[ZONE_0]->GetCheckDescent()){
+      if(!CheckDescent() && whilecounter == 0 && config_container[ZONE_0]->GetCheckDescent()){
           //whilecounter=maxcounter-1;
           ComputeNegativeSearchDirection();
           std::cout<<"No Descent Direction!..."<<CheckDescent()<<std::endl;
@@ -7409,7 +7408,7 @@ void COneShotFluidDriver::RunOneShot(){
       if(whilecounter>0){
         //Armijo line search (halfen step)
         stepsize=stepsize*0.5;
-        if(whilecounter==maxcounter && partstep){
+        if(whilecounter == maxcounter && partstep){
           stepsize = config_container[ZONE_0]->GetStepSize();
         }
         /*---Load the old design for line search---*/
@@ -7451,14 +7450,16 @@ void COneShotFluidDriver::RunOneShot(){
 
     /*--- Do a primal and adjoint update ---*/
     if(!testLagrange || 
-       (ExtIter>config_container[ZONE_0]->GetOneShotStart() &&
-        ExtIter<config_container[ZONE_0]->GetOneShotStop() ) ){
+       (TimeIter>config_container[ZONE_0]->GetOneShotStart() &&
+        TimeIter<config_container[ZONE_0]->GetOneShotStop() ) ){
       PrimalDualStep();
       CalculateLagrangian(true);
     }
     whilecounter++;
 
-  }
+  } while(TimeIter>config_container[ZONE_0]->GetOneShotStart() && 
+          TimeIter<config_container[ZONE_0]->GetOneShotStop() &&
+          (!CheckFirstWolfe()) && whilecounter<maxcounter+1);
 
   if (whilecounter==maxcounter+1){
     descent = false;
@@ -7468,7 +7469,7 @@ void COneShotFluidDriver::RunOneShot(){
   std::cout<<"Line search information: "<<Lagrangian<<" "<<ObjFunc<<" "<<stepsize<<std::endl;
   if(testLagrange){
 
-    if(ExtIter>config_container[ZONE_0]->GetOneShotStart()&&ExtIter<config_container[ZONE_0]->GetOneShotStop()){
+    if(TimeIter>config_container[ZONE_0]->GetOneShotStart()&&TimeIter<config_container[ZONE_0]->GetOneShotStop()){
       //Evaluate sensitivity of augmented Lagrangian for an update only in the design
       /*--- N_u ---*/
       for (iZone = 0; iZone < nZone; iZone++){
@@ -7515,7 +7516,7 @@ void COneShotFluidDriver::RunOneShot(){
       solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreSolutionDelta();
     }
   }
-  if(ExtIter>=config_container[ZONE_0]->GetOneShotStart()&&ExtIter<config_container[ZONE_0]->GetOneShotStop()){
+  if(TimeIter>=config_container[ZONE_0]->GetOneShotStart()&&TimeIter<config_container[ZONE_0]->GetOneShotStop()){
 
     /*--- Update design variable ---*/
     UpdateDesignVariable();
@@ -7566,7 +7567,7 @@ void COneShotFluidDriver::RunOneShot(){
     ComputeActiveSet();
 
     /*--- Do a BFGS update to approximate the inverse preconditioner ---*/
-    if(ExtIter>config_container[ZONE_0]->GetOneShotStart() && !config_container[ZONE_0]->GetLimitedMemory()) BFGSUpdate(config_container[ZONE_0]);
+    if(TimeIter>config_container[ZONE_0]->GetOneShotStart() && !config_container[ZONE_0]->GetLimitedMemory()) BFGSUpdate(config_container[ZONE_0]);
     if(config_container[ZONE_0]->GetLimitedMemory()) LBFGSUpdate(config_container[ZONE_0]);
 
     if (testLagrange){ SetAugmentedLagrangianGradient(); }
@@ -7578,6 +7579,7 @@ void COneShotFluidDriver::RunOneShot(){
 }
 
 void COneShotFluidDriver::Run(){
+ config_container[ZONE_0]->SetIntIter(TimeIter);
  if (config_container[ZONE_0]->GetBoolPiggyBack()) RunPiggyBack();
  if (config_container[ZONE_0]->GetBoolQuasiNewton()) RunBFGS();
  else RunOneShot();
@@ -7589,7 +7591,7 @@ void COneShotFluidDriver::RunBFGS(){
   unsigned short nConvIter = 500; //Achtung vorher 500 // dann 2000
   unsigned short iterCount;
 
-  if(ExtIter>config_container[ZONE_0]->GetOneShotStart()){
+  if(TimeIter>config_container[ZONE_0]->GetOneShotStart()){
       /*--- Store the old solution and the old design for line search ---*/
       for (iZone = 0; iZone < nZone; iZone++){
         solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreSolution();
@@ -7599,7 +7601,7 @@ void COneShotFluidDriver::RunBFGS(){
       }
   }
 
-  while(ExtIter>config_container[ZONE_0]->GetOneShotStart() && (!CheckFirstWolfe())){
+  do {
     if(whilecounter>0){
       /*---Load the old solution and the old design for line search---*/
       for (iZone = 0; iZone < nZone; iZone++){
@@ -7609,7 +7611,7 @@ void COneShotFluidDriver::RunBFGS(){
         solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadMeshPoints(config_container[iZone], geometry_container[iZone][INST_0][MESH_0]);
       }
     }
-    if(ExtIter>config_container[ZONE_0]->GetOneShotStart()){
+    if(TimeIter>config_container[ZONE_0]->GetOneShotStart()){
       /*--- Do a design update based on the search direction (mesh deformation with stepsize) ---*/
       ComputeDesignVarUpdate(stepsize);
       for (iZone = 0; iZone < nZone; iZone++){
@@ -7626,9 +7628,9 @@ void COneShotFluidDriver::RunBFGS(){
     cout << "log10Primal[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetRes_RMS(0))<<std::endl;
     stepsize=stepsize*0.5;
     whilecounter++;
-  }
+  } while(TimeIter>config_container[ZONE_0]->GetOneShotStart() && (!CheckFirstWolfe()));
 
-  if(ExtIter>=config_container[ZONE_0]->GetOneShotStart()){
+  if(TimeIter>=config_container[ZONE_0]->GetOneShotStart()){
       /*--- Update design variable ---*/
       UpdateDesignVariable();
 
@@ -7644,7 +7646,7 @@ void COneShotFluidDriver::RunBFGS(){
       SetAugmentedLagrangianGradient();
 
       ComputeActiveSet();
-      if(ExtIter>config_container[ZONE_0]->GetOneShotStart()) BFGSUpdate(config_container[ZONE_0]);
+      if(TimeIter>config_container[ZONE_0]->GetOneShotStart()) BFGSUpdate(config_container[ZONE_0]);
 
       /*--- Compute the search direction for the line search procedure ---*/
       ComputeSearchDirection();
@@ -7708,7 +7710,7 @@ void COneShotFluidDriver::RunPiggyBack() {
   cout << "log10Adjoint[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->GetRes_RMS(0))<<std::endl;
   cout << "log10Primal[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetRes_RMS(0))<<std::endl;
 
-  if(ExtIter>config_container[ZONE_0]->GetOneShotStart()){
+  if(TimeIter>config_container[ZONE_0]->GetOneShotStart()){
 
     /*---N_u---*/
     for (iZone = 0; iZone < nZone; iZone++){
@@ -7729,18 +7731,11 @@ void COneShotFluidDriver::SetRecording(unsigned short kind_recording){
 
   AD::Reset();
 
-  for (iZone = 0; iZone < nZone; iZone++) {
-    for (iMesh = 0; iMesh <= config_container[iZone]->GetnMGLevels(); iMesh++){
-      solver_container[iZone][INST_0][iMesh][ADJFLOW_SOL]->SetRecording(geometry_container[iZone][INST_0][iMesh], config_container[iZone]);
-    }
-    if (config_container[iZone]->GetKind_Solver() == DISC_ADJ_RANS && !config_container[iZone]->GetFrozen_Visc_Disc()) {
-      solver_container[iZone][INST_0][MESH_0][ADJTURB_SOL]->SetRecording(geometry_container[iZone][INST_0][MESH_0], config_container[iZone]);
-    }
-    if (config_container[iZone]->GetKind_Solver() == ONE_SHOT_RANS && !config_container[iZone]->GetFrozen_Visc_Disc()) {
-      solver_container[iZone][INST_0][MESH_0][ADJTURB_SOL]->SetRecording(geometry_container[iZone][INST_0][MESH_0], config_container[iZone]);
-    }
-  }
+  /*--- Prepare for recording by resetting the solution to the initial converged solution---*/
 
+  for (iZone = 0; iZone < nZone; iZone++) {
+    iteration_container[iZone][INST_0]->SetRecording(solver_container, geometry_container, config_container, iZone, INST_0, kind_recording);
+  }
 
   /*---Enable recording and register input of the flow iteration (conservative variables or node coordinates) --- */
 

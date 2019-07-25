@@ -3682,7 +3682,7 @@ void COneShotFluidIteration::SetDependencies(CSolver *****solver_container, CGeo
 
   bool frozen_visc = config_container[iZone]->GetFrozen_Visc_Disc();
   bool heat = config_container[iZone]->GetWeakly_Coupled_Heat();
-  if ((kind_recording == MESH_COORDS) || (kind_recording == NONE)  ||
+  if ((kind_recording == MESH_COORDS) || (kind_recording == NONE)  || (kind_recording == COMBINED) ||
       (kind_recording == GEOMETRY_CROSS_TERM) || (kind_recording == ALL_VARIABLES)){
 
     /*--- Update geometry to get the influence on other geometry variables (normals, volume etc) ---*/
