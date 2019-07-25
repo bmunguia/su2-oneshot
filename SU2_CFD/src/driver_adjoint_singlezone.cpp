@@ -315,6 +315,7 @@ void CDiscAdjSinglezoneDriver::SetObjFunction(){
   case EULER:                    case NAVIER_STOKES:                   case RANS:
   case DISC_ADJ_EULER:           case DISC_ADJ_NAVIER_STOKES:          case DISC_ADJ_RANS:
   case DISC_ADJ_FEM_EULER:       case DISC_ADJ_FEM_NS:                 case DISC_ADJ_FEM_RANS:
+  case ONE_SHOT_EULER:           case ONE_SHOT_NAVIER_STOKES:          case ONE_SHOT_RANS:
 
     solver[FLOW_SOL]->SetTotal_ComboObj(0.0);
 
