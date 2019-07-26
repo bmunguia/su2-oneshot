@@ -118,7 +118,7 @@ void COneShotSolver::SetGeometrySensitivityLagrangian(CGeometry *geometry){
     unsigned long iPoint;
 
     nPoint  = geometry->GetnPoint();
-    nDim    = geometry->GetnDim();
+    nDim          = geometry->GetnDim();
 
     geometry->InitializeSensitivity();
 
@@ -135,7 +135,7 @@ void COneShotSolver::SetGeometrySensitivityGradient(CGeometry *geometry){
     unsigned long iPoint;
 
     nPoint  = geometry->GetnPoint();
-    nDim    = geometry->GetnDim();
+    nDim          = geometry->GetnDim();
 
     geometry->InitializeSensitivity();
 
@@ -151,7 +151,7 @@ void COneShotSolver::SaveSensitivity(CGeometry *geometry){
     unsigned long iPoint;
 
     nPoint  = geometry->GetnPoint();
-    nDim    = geometry->GetnDim();
+    nDim          = geometry->GetnDim();
 
     for (iPoint = 0; iPoint < nPoint; iPoint++) {
       for (iDim = 0; iDim < nDim; iDim++) {
@@ -165,7 +165,7 @@ void COneShotSolver::ResetSensitivityLagrangian(CGeometry *geometry){
     unsigned long iPoint;
 
     nPoint  = geometry->GetnPoint();
-    nDim    = geometry->GetnDim();
+    nDim          = geometry->GetnDim();
 
     for (iPoint = 0; iPoint < nPoint; iPoint++) {
       for (iDim = 0; iDim < nDim; iDim++) {
@@ -179,7 +179,7 @@ void COneShotSolver::UpdateSensitivityLagrangian(CGeometry *geometry, su2double 
     unsigned long iPoint;
 
     nPoint  = geometry->GetnPoint();
-    nDim    = geometry->GetnDim();
+    nDim          = geometry->GetnDim();
 //    std::cout<<"Update Factor "<<factor<<": ";
     for (iPoint = 0; iPoint < nPoint; iPoint++) {
       for (iDim = 0; iDim < nDim; iDim++) {
@@ -287,22 +287,36 @@ void COneShotSolver::LoadSaveSolution(){
 void COneShotSolver::CalculateAlphaBeta(){
   unsigned short iVar;
   unsigned long iPoint;
-  su2double helper=0.0;
-  su2double normDelta = 0.0;
-  su2double normDeltaNew = 0.0;
+  su2double helper=0.0, myHelper=0.0;
+  su2double normDelta=0.0, myNormDelta=0.0;
+  su2double normDeltaNew=0.0, myNormDeltaNew=0.0;
   /* --- Estimate rho and theta values --- */
-  for (iPoint = 0; iPoint < nPoint; iPoint++){
+  for (iPoint = 0; iPoint < nPointDomain; iPoint++){
     for (iVar = 0; iVar < nVar; iVar++){
       normDelta += direct_solver->node[iPoint]->GetSolution_Delta(iVar)*direct_solver->node[iPoint]->GetSolution_Delta(iVar);
       normDeltaNew += (direct_solver->node[iPoint]->GetSolution(iVar)-direct_solver->node[iPoint]->GetSolution_Store(iVar))*(direct_solver->node[iPoint]->GetSolution(iVar)-direct_solver->node[iPoint]->GetSolution_Store(iVar));
       helper += direct_solver->node[iPoint]->GetSolution_Delta(iVar)*(node[iPoint]->GetSolution(iVar)-node[iPoint]->GetSolution_Store(iVar))-node[iPoint]->GetSolution_Delta(iVar)*(direct_solver->node[iPoint]->GetSolution(iVar)-direct_solver->node[iPoint]->GetSolution_Store(iVar));
     }
   }
+
+#ifdef HAVE_MPI
+  SU2_MPI::Allreduce(&myHelper, &helper, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(&myNormDelta, &normDelta, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(&myNormDeltaNew, &normDeltaNew, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+  helper       = myHelper;
+  normDelta    = myNormDelta;
+  normDeltaNew = myNormDeltaNew;
+#endif
+
   if(sqrt(normDeltaNew)/sqrt(normDelta)>0.9*rho) rho = sqrt(normDeltaNew)/sqrt(normDelta);
   if(fabs(helper)/normDelta>0.9*theta) theta = fabs(helper)/normDelta;
-  std::cout<<"Estimate: "<<sqrt(normDeltaNew)/sqrt(normDelta)<<" "<<fabs(helper)/normDelta<<std::endl;
-  std::cout<<"Rho, Theta: "<<rho<<" "<<theta<<std::endl;
-  std::cout<<"Alpha, Beta: "<<2*theta/((1-rho)*(1-rho))<<" "<<2./theta<<std::endl;
+
+  if (rank == MASTER_NODE) {
+    std::cout<<"Estimate: "<<sqrt(normDeltaNew)/sqrt(normDelta)<<" "<<fabs(helper)/normDelta<<std::endl;
+    std::cout<<"Rho, Theta: "<<rho<<" "<<theta<<std::endl;
+    std::cout<<"Alpha, Beta: "<<2*theta/((1-rho)*(1-rho))<<" "<<2./theta<<std::endl;
+  }
 }
 
 void COneShotSolver::SetAlphaBeta(CConfig *config){
@@ -313,7 +327,7 @@ void COneShotSolver::SetAlphaBeta(CConfig *config){
 su2double COneShotSolver::CalculateLagrangianPart(CConfig *config, bool augmented){
   unsigned short iVar;
   unsigned long iPoint;
-  su2double Lagrangian=0.0;
+  su2double Lagrangian=0.0, myLagrangian=0.0;
   su2double helper=0.0;
 
   for (iPoint = 0; iPoint < nPoint; iPoint++){
@@ -327,28 +341,35 @@ su2double COneShotSolver::CalculateLagrangianPart(CConfig *config, bool augmente
 
   /* --- Calculate augmented Lagrangian terms (alpha and beta) --- */
   if(augmented){
-    for (iPoint = 0; iPoint < nPoint; iPoint++){
+    for (iPoint = 0; iPoint < nPointDomain; iPoint++){
       for (iVar = 0; iVar < nVar; iVar++){
         helper+=direct_solver->node[iPoint]->GetSolution_Delta(iVar)*direct_solver->node[iPoint]->GetSolution_Delta(iVar);
       }
     }
-    Lagrangian+=helper*(config->GetOneShotAlpha()/2);
+    myLagrangian+=helper*(config->GetOneShotAlpha()/2);
     helper=0.0;
-    for (iPoint = 0; iPoint < nPoint; iPoint++){
+    for (iPoint = 0; iPoint < nPointDomain; iPoint++){
       for (iVar = 0; iVar < nVar; iVar++){
         helper+=node[iPoint]->GetSolution_Delta(iVar)*node[iPoint]->GetSolution_Delta(iVar);
       }
     }
-    Lagrangian+=helper*(config->GetOneShotBeta()/2);
+    myLagrangian+=helper*(config->GetOneShotBeta()/2);
   }
 
   helper=0.0;
-  for (iPoint = 0; iPoint < nPoint; iPoint++){
+  for (iPoint = 0; iPoint < nPointDomain; iPoint++){
     for (iVar = 0; iVar < nVar; iVar++){
       helper+=direct_solver->node[iPoint]->GetSolution_Delta(iVar)*node[iPoint]->GetSolution_Store(iVar);
     }
   }
-  Lagrangian+=helper;
+  myLagrangian+=helper;
+
+#ifdef HAVE_MPI
+  SU2_MPI::Allreduce(&myLagrangian, &Lagrangian, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+  Lagrangian = myLagrangian;
+#endif
+
   return Lagrangian;
 }
 
@@ -449,11 +470,19 @@ void COneShotSolver::SetConstrDerivative(unsigned short iConstr){
 su2double COneShotSolver::MultiplyConstrDerivative(unsigned short iConstr, unsigned short jConstr){
   unsigned short iVar;
   unsigned long iPoint;
-  su2double product = 0.0;
-  for (iPoint = 0; iPoint < nPoint; iPoint++){
+  su2double product = 0.0, myProduct=0.0;
+
+  for (iPoint = 0; iPoint < nPointDomain; iPoint++){
     for (iVar = 0; iVar < nVar; iVar++){
       product+= DConsVec[iConstr][iPoint][iVar]*DConsVec[jConstr][iPoint][iVar];
     }
   }
+
+#ifdef HAVE_MPI
+  SU2_MPI::Allreduce(&myProduct, &product, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+  product = myProduct;
+#endif
+
   return product;
 }
