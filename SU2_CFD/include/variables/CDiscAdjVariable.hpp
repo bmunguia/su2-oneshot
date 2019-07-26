@@ -259,18 +259,3 @@ public:
 
 
 };
-
-/*!
- * \class COneShotVariable
- * \brief Main class for defining the variables of the one shot solver.
- * \ingroup One_Shot
- * \author L.Kusch
- * \version 5.0.0 "Raven"
- */
-class COneShotVariable : public CDiscAdjVariable{
-private:
-public:
-  COneShotVariable(void);
-  ~COneShotVariable(void);
-  COneShotVariable(su2double *val_solution, unsigned short val_ndim, unsigned short val_nvar, CConfig *config);
-};

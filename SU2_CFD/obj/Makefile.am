@@ -110,6 +110,7 @@ libSU2Core_sources = \
   ../src/driver_direct_multizone.cpp \
   ../src/driver_direct_singlezone.cpp \
   ../src/driver_adjoint_singlezone.cpp \
+  ../src/driver_one_shot.cpp \
   ../src/driver_structure.cpp \
   ../src/iteration_structure.cpp \
   ../src/numerics_adjoint_mean.cpp \
@@ -136,6 +137,7 @@ libSU2Core_sources = \
   ../src/solver_adjoint_turbulent.cpp \
   ../src/solver_adjoint_discrete.cpp \
   ../src/solver_adjoint_elasticity.cpp \
+  ../src/solver_one_shot.cpp \
   ../src/solver_direct_heat.cpp \
   ../src/solver_direct_mean.cpp \
   ../src/solver_direct_mean_fem.cpp \
