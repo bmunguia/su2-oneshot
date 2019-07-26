@@ -168,6 +168,39 @@ COneShotFluidDriver::~COneShotFluidDriver(void){
 
 }
 
+void COneShotFluidDriver::Preprocess(unsigned long TimeIter) {
+
+  unsigned short iZone;
+
+  for(iZone = 0; iZone < nZone; iZone++) {
+
+    /*--- Set the value of the external iteration to TimeIter. -------------------------------------*/
+    /*--- TODO: This should be generalised for an homogeneous criteria throughout the code. --------*/
+
+    config_container[iZone]->SetExtIter(TimeIter);
+
+    /*--- NOTE: Inv Design Routines moved to CDiscAdjFluidIteration::Preprocess ---*/
+
+    /*--- Preprocess the adjoint iteration ---*/
+
+    iteration_container[iZone][INST_0]->Preprocess(output, integration_container, geometry_container,
+                          solver_container, numerics_container, config_container,
+                          surface_movement, grid_movement, FFDBox, iZone, INST_0);
+
+  }
+
+}
+
+
+void COneShotFluidDriver::Run(){
+
+ config_container[ZONE_0]->SetIntIter(TimeIter);
+ if (config_container[ZONE_0]->GetBoolPiggyBack()) RunPiggyBack();
+ if (config_container[ZONE_0]->GetBoolQuasiNewton()) RunBFGS();
+ else RunOneShot();
+
+}
+
 void COneShotFluidDriver::RunOneShot(){
 
   su2double stepsize = config_container[ZONE_0]->GetStepSize();
@@ -176,8 +209,6 @@ void COneShotFluidDriver::RunOneShot(){
   bool testLagrange = config_container[ZONE_0]->GetOneShotLagrange(); //Lagrange function includes all updates and not only design update if testLagrange is set to false
   bool descent = true;
   bool partstep = config_container[ZONE_0]->GetOneShotPartStep();
-  cout << "log10Adjoint[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->GetRes_RMS(0))<<std::endl;
-  cout << "log10Primal[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetRes_RMS(0))<<std::endl;
 
   /*--- Store the old solution and the old design for line search ---*/
   for (iZone = 0; iZone < nZone; iZone++){
@@ -257,7 +288,9 @@ void COneShotFluidDriver::RunOneShot(){
     descent = false;
     if(config_container[ZONE_0]->GetZeroStep()) stepsize = 0.0;
   }
-  
+
+  cout << "log10Adjoint[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->GetRes_RMS(0))<<std::endl;
+  cout << "log10Primal[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetRes_RMS(0))<<std::endl;  
   std::cout<<"Line search information: "<<Lagrangian<<" "<<ObjFunc<<" "<<stepsize<<std::endl;
   if(testLagrange){
 
@@ -368,13 +401,6 @@ void COneShotFluidDriver::RunOneShot(){
 
     StoreLagrangianInformation();
   }
-}
-
-void COneShotFluidDriver::Run(){
- config_container[ZONE_0]->SetIntIter(TimeIter);
- if (config_container[ZONE_0]->GetBoolPiggyBack()) RunPiggyBack();
- if (config_container[ZONE_0]->GetBoolQuasiNewton()) RunBFGS();
- else RunOneShot();
 }
 
 void COneShotFluidDriver::RunBFGS(){

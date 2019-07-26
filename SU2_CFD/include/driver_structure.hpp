@@ -1427,7 +1427,7 @@ public:
    * \brief Preprocess the single-zone iteration
    * \param[in] TimeIter - index of the current time-step.
    */
-  void Preprocess(unsigned long TimeIter);
+  virtual void Preprocess(unsigned long TimeIter);
 
   /*!
    * \brief Run a single iteration of the discrete adjoint solver with a single zone.
@@ -1640,6 +1640,12 @@ public:
    * \brief Destructor of the class.
    */
   ~COneShotFluidDriver(void);
+
+  /*!
+   * \brief Preprocess the one-shot iteration
+   * \param[in] TimeIter - index of the current time-step.
+   */
+  void Preprocess(unsigned long TimeIter);
 
   /*!
    * \brief Runs main routines of the one-shot class.
