@@ -4462,6 +4462,15 @@ public:
 
   virtual su2double MultiplyConstrDerivative(unsigned short iConstr, unsigned short jConstr);
 
+  virtual void SetObjFunc_Value(su2double val_ObjFunc);
+
+  virtual su2double GetObjFunc_Value(void);
+
+  virtual void SetConFunc_Value(su2double val_ConFunc);
+
+  virtual void AddConFunc_Value(su2double val_ConFunc);
+
+  virtual su2double GetConFunc_Value(void);
   
 protected:
   /*!
@@ -15665,6 +15674,7 @@ class COneShotSolver : public CDiscAdjSolver {
 private:
   su2double theta, rho;
   unsigned short nConstr;
+  su2double ConFunc_Value;
   su2double *** DConsVec;
 
 public:
@@ -15858,7 +15868,18 @@ public:
   void SetFiniteDifferenceSens(CGeometry *geometry, CConfig *config);
 
   void SetConstrDerivative(unsigned short iConstr);
+
   su2double MultiplyConstrDerivative(unsigned short iConstr, unsigned short jConstr);
+
+  void SetObjFunc_Value(su2double val_ObjFunc);
+
+  su2double GetObjFunc_Value(void);
+
+  void SetConFunc_Value(su2double val_ConFunc);
+
+  void AddConFunc_Value(su2double val_ConFunc);
+
+  su2double GetConFunc_Value(void);
 
 };
 #include "solver_structure.inl"

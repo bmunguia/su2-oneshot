@@ -2549,3 +2549,23 @@ inline void CSolver::SetConstrDerivative(unsigned short iConstr){}
 
 inline su2double CSolver::MultiplyConstrDerivative(unsigned short iConstr, unsigned short jConstr){ return 0; }
 
+inline void CSolver::SetObjFunc_Value(su2double val_ObjFunc) { }
+
+inline su2double CSolver::GetObjFunc_Value(void) { return 0; }
+
+inline void CSolver::SetConFunc_Value(su2double val_ConFunc) { }
+
+inline void CSolver::AddConFunc_Value(su2double val_ConFunc) { }
+
+inline su2double CSolver::GetConFunc_Value(void)  { return 0; }
+
+inline void COneShotSolver::SetObjFunc_Value(su2double val_ObjFunc) { ObjFunc_Value = val_ObjFunc; }
+
+inline su2double COneShotSolver::GetObjFunc_Value(void) { return ObjFunc_Value; }
+
+inline void COneShotSolver::SetConFunc_Value(su2double val_ConFunc) { ConFunc_Value = val_ConFunc; }
+
+inline void COneShotSolver::AddConFunc_Value(su2double val_ConFunc) { ConFunc_Value += val_ConFunc; }
+
+inline su2double COneShotSolver::GetConFunc_Value(void)  { return ConFunc_Value; }
+

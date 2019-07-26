@@ -199,6 +199,28 @@ void COneShotFluidDriver::Run(){
  if (config_container[ZONE_0]->GetBoolQuasiNewton()) RunBFGS();
  else RunOneShot();
 
+  /*--- Screen output ---*/
+  bool steady = (config_container[ZONE_0]->GetUnsteady_Simulation() == STEADY);
+  bool output_history = false;
+
+#ifndef HAVE_MPI
+  StopTime = su2double(clock())/su2double(CLOCKS_PER_SEC);
+#else
+  StopTime = MPI_Wtime();
+#endif
+  UsedTime = StopTime - StartTime;
+
+  /*--- If convergence was reached --*/
+  StopCalc = integration_container[ZONE_0][INST_0][ADJFLOW_SOL]->GetConvergence();
+
+  /*--- Write the convergence history for the fluid (only screen output) ---*/
+
+  /*--- The logic is right now case dependent ----*/
+  /*--- This needs to be generalized when the new output structure comes ---*/
+  output_history = (steady && !((config_container[ZONE_0]->GetnInner_Iter()==1)));
+
+  if (output_history) output->SetConvHistory_Body(NULL, geometry_container, solver_container, config_container, integration_container, false, UsedTime, ZONE_0, INST_0);
+
 }
 
 void COneShotFluidDriver::RunOneShot(){
@@ -289,11 +311,11 @@ void COneShotFluidDriver::RunOneShot(){
     if(config_container[ZONE_0]->GetZeroStep()) stepsize = 0.0;
   }
 
-  if (rank == MASTER_NODE) {
-    cout << "log10Adjoint[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->GetRes_RMS(0))<<std::endl;
-    cout << "log10Primal[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetRes_RMS(0))<<std::endl;  
-    cout<<"Line search information: "<<Lagrangian<<" "<<ObjFunc<<" "<<stepsize<<std::endl;
-  }
+  // if (rank == MASTER_NODE) {
+  //   cout << "log10Adjoint[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->GetRes_RMS(0))<<std::endl;
+  //   cout << "log10Primal[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetRes_RMS(0))<<std::endl;  
+  //   cout<<"Line search information: "<<Lagrangian<<" "<<ObjFunc<<" "<<stepsize<<std::endl;
+  // }
   if(testLagrange){
 
     if(TimeIter>config_container[ZONE_0]->GetOneShotStart()&&TimeIter<config_container[ZONE_0]->GetOneShotStop()){
@@ -444,10 +466,10 @@ void COneShotFluidDriver::RunBFGS(){
       PrimalDualStep();
     }
     CalculateLagrangian(false);
-    if (rank == MASTER_NODE) {
-      cout << "log10Adjoint[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->GetRes_RMS(0))<<std::endl;
-      cout << "log10Primal[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetRes_RMS(0))<<std::endl;
-    }
+    // if (rank == MASTER_NODE) {
+    //   cout << "log10Adjoint[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->GetRes_RMS(0))<<std::endl;
+    //   cout << "log10Primal[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetRes_RMS(0))<<std::endl;
+    // }
     stepsize=stepsize*0.5;
     whilecounter++;
   } while(TimeIter>config_container[ZONE_0]->GetOneShotStart() && (!CheckFirstWolfe()));
@@ -529,10 +551,10 @@ void COneShotFluidDriver::RunPiggyBack() {
 
   PrimalDualStep();
 
-  if (rank == MASTER_NODE) {
-    cout << "log10Adjoint[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->GetRes_RMS(0))<<std::endl;
-    cout << "log10Primal[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetRes_RMS(0))<<std::endl;
-  }
+  // if (rank == MASTER_NODE) {
+  //   cout << "log10Adjoint[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->GetRes_RMS(0))<<std::endl;
+  //   cout << "log10Primal[RMS Density]: " << log10(solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetRes_RMS(0))<<std::endl;
+  // }
 
   if(TimeIter>config_container[ZONE_0]->GetOneShotStart()){
 
@@ -898,7 +920,7 @@ void COneShotFluidDriver::SetProjection_FD(CGeometry *geometry, CConfig *config,
 
     else {
       if (rank == MASTER_NODE)
-        cout << "Design Variable not implement yet" << endl;
+        cout << "Design Variable not implement yet." << endl;
     }
 
     /*--- Load the delta change in the design variable (finite difference step). ---*/
@@ -1195,7 +1217,7 @@ bool COneShotFluidDriver::CheckFirstWolfe(){
     //admissible_step += (-1.0/alpha)*DesignVarUpdate[iDV]*DesignVarUpdate[iDV]; //Option was set before, now: first option again!
   }
   admissible_step *= cwolfeone;
-  if (rank == MASTER_NODE) cout<<"Wolfe: "<<Lagrangian_Old<<" "<<Lagrangian<<" "<<admissible_step<<std::endl;
+  // if (rank == MASTER_NODE) cout<<"Wolfe: "<<Lagrangian_Old<<" "<<Lagrangian<<" "<<admissible_step<<std::endl;
   return (Lagrangian<=Lagrangian_Old+admissible_step);
 }
 
@@ -1261,18 +1283,18 @@ void COneShotFluidDriver::CalculateLagrangian(bool augmented){
   
   unsigned short iZone;
 
-  if (rank == MASTER_NODE) cout<<"Objective function value: "<<ObjFunc<<std::endl;
+  // if (rank == MASTER_NODE) cout<<"Objective function value: "<<ObjFunc<<std::endl;
   
   Lagrangian = 0.0;
   Lagrangian += ObjFunc; //TODO use for BFGS either only objective function or normal Lagrangian
   for (unsigned short iConstr = 0; iConstr < config_container[ZONE_0]->GetnConstr(); iConstr++){
     Lagrangian += ConstrFunc[iConstr]*multiplier[iConstr];
 
-    if (rank == MASTER_NODE) {
-      if(iConstr==0) cout<<"Constraint function value: ";
-      cout<<ConstrFunc[iConstr]<<" ";
-      if (iConstr==config_container[ZONE_0]->GetnConstr()-1) cout<<std::endl;
-    }
+    // if (rank == MASTER_NODE) {
+    //   if(iConstr==0) cout<<"Constraint function value: ";
+    //   cout<<ConstrFunc[iConstr]<<" ";
+    //   if (iConstr==config_container[ZONE_0]->GetnConstr()-1) cout<<std::endl;
+    // }
   }
   if(augmented){
     su2double helper=0.0;
@@ -1285,6 +1307,8 @@ void COneShotFluidDriver::CalculateLagrangian(bool augmented){
       Lagrangian+=solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->CalculateLagrangianPart(config_container[iZone], augmented);
     }
   }
+
+  solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->SetObjFunc_Value(ObjFunc);
 }
 
 su2double COneShotFluidDriver::ProjectionSet(unsigned short iDV, su2double value, bool active){
@@ -1329,10 +1353,10 @@ void COneShotFluidDriver::ComputeActiveSet(){
     if(DesignVariable[iDV]-lb<=epsilon) activeset[iDV]=true;
   }
 
-  if (rank == MASTER_NODE) {
-    if (epsilon == 0) cout<<" All design variable bounds are reached "<<std::endl;
-    else cout<<"Estimator for bounds: "<<epsilon<<std::endl;
-  }
+  // if (rank == MASTER_NODE) {
+  //   if (epsilon == 0) cout<<" All design variable bounds are reached "<<std::endl;
+  //   else cout<<"Estimator for bounds: "<<epsilon<<std::endl;
+  // }
 }
 
 void COneShotFluidDriver::SetShiftedLagrangianGradient(){
@@ -1577,7 +1601,7 @@ void COneShotFluidDriver::SetConstrFunction(){
   unsigned short Kind_ConstrFunc;
   su2double FunctionValue = 0.0;
 
-  if (rank == MASTER_NODE) cout<<"Function Value: ";
+  // if (rank == MASTER_NODE) cout<<"Function Value: ";
 
   for (unsigned short iConstr = 0; iConstr < config_container[ZONE_0]->GetnConstr(); iConstr++){
     ConstrFunc[iConstr] = 0.0;
@@ -1589,11 +1613,11 @@ void COneShotFluidDriver::SetConstrFunction(){
     ConstrFunc[iConstr] = config_container[ZONE_0]->GetConstraintScale(iConstr)*(config_container[ZONE_0]->GetConstraintTarget(iConstr) - FunctionValue);
 
     if (rank == MASTER_NODE){
-      cout<<FunctionValue<<" ";
+      // cout<<FunctionValue<<" ";
       AD::RegisterOutput(ConstrFunc[iConstr]);
     }
   }
-  if (rank == MASTER_NODE) cout<<std::endl;
+  // if (rank == MASTER_NODE) cout<<std::endl;
 }
 
 void COneShotFluidDriver::UpdateMultiplier(su2double stepsize){
@@ -1605,16 +1629,18 @@ void COneShotFluidDriver::UpdateMultiplier(su2double stepsize){
     }
     multiplier[iConstr] = multiplier[iConstr]+stepsize*helper*config_container[ZONE_0]->GetMultiplierScale(iConstr);
 
-    if (rank == MASTER_NODE) {
-      if(iConstr==0) cout<<"Multiplier Update: ";
-      cout<<ConstrFunc_Store[iConstr]<<" "<<multiplier[iConstr]<<" ";
-      if(iConstr==config_container[ZONE_0]->GetnConstr()-1) cout<<std::endl;
-    }
+    // if (rank == MASTER_NODE) {
+    //   if(iConstr==0) cout<<"Multiplier Update: ";
+    //   cout<<ConstrFunc_Store[iConstr]<<" "<<multiplier[iConstr]<<" ";
+    //   if(iConstr==config_container[ZONE_0]->GetnConstr()-1) cout<<std::endl;
+    // }
   }
 }
 
 void COneShotFluidDriver::StoreConstrFunction(){
+  solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->SetConFunc_Value(0.0);
   for(unsigned short iConstr = 0; iConstr < config_container[ZONE_0]->GetnConstr(); iConstr++){
     ConstrFunc_Store[iConstr] = ConstrFunc[iConstr];
+    solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->AddConFunc_Value(ConstrFunc[iConstr]);
   }
 }

@@ -1449,7 +1449,7 @@ public:
    * \brief Run one iteration of the solver.
    * \param[in] kind_recording - Type of recording (full list in ENUM_RECORDING, option_structure.hpp)
    */
-  void DirectRun(unsigned short kind_recording);
+  virtual void DirectRun(unsigned short kind_recording);
 
   /*!
    * \brief Set the objective function.
@@ -1591,7 +1591,6 @@ class COneShotFluidDriver : public CDiscAdjSinglezoneDriver {
 
 protected:
   unsigned short RecordingState; /*!< \brief The kind of recording the tape currently holds.*/
-  CIteration** direct_iteration; /*!< \brief A pointer to the direct iteration.*/
 
   unsigned short nDV_Total; /*!< \brief Total number of design variables used in optimization.*/
 

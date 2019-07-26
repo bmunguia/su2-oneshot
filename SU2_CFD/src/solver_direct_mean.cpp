@@ -6756,7 +6756,7 @@ void CEulerSolver::GetPower_Properties(CGeometry *geometry, CConfig *config, uns
           
         }
         
-        if (write_heads && Output && !config->GetDiscrete_Adjoint()) cout << "-------------------------------------------------------------------------" << endl << endl;
+        if (write_heads && Output && !config->GetDiscrete_Adjoint() && !config->GetBoolOneShot()) cout << "-------------------------------------------------------------------------" << endl << endl;
         
       }
       
