@@ -7441,9 +7441,9 @@ void COneShotFluidDriver::RunOneShot(){
       else ComputeDesignVarUpdate(0.0);
 
       for (iZone = 0; iZone < nZone; iZone++){
-        config_container[iZone]->SetKind_SU2(2); // set SU2_DEF as the solver
+        config_container[iZone]->SetKind_SU2(SU2_DEF); // set SU2_DEF as the solver
         SurfaceDeformation(geometry_container[iZone][INST_0][MESH_0], config_container[iZone], surface_movement[iZone], grid_movement[iZone][INST_0]);
-        config_container[iZone]->SetKind_SU2(1); // set SU2_CFD as the solver
+        config_container[iZone]->SetKind_SU2(SU2_CFD); // set SU2_CFD as the solver
       }
 
     }
@@ -7615,9 +7615,9 @@ void COneShotFluidDriver::RunBFGS(){
       /*--- Do a design update based on the search direction (mesh deformation with stepsize) ---*/
       ComputeDesignVarUpdate(stepsize);
       for (iZone = 0; iZone < nZone; iZone++){
-        config_container[iZone]->SetKind_SU2(2); // set SU2_DEF as the solver
+        config_container[iZone]->SetKind_SU2(SU2_DEF); // set SU2_DEF as the solver
         SurfaceDeformation(geometry_container[iZone][INST_0][MESH_0], config_container[iZone], surface_movement[iZone], grid_movement[iZone][INST_0]);
-        config_container[iZone]->SetKind_SU2(1); // set SU2_CFD as the solver
+        config_container[iZone]->SetKind_SU2(SU2_CFD); // set SU2_CFD as the solver
       }
     }
     for(iterCount=0;iterCount<nConvIter;iterCount++){
@@ -8700,7 +8700,7 @@ void COneShotFluidDriver::SetAdj_ObjFunction_Zero(){
 
 void COneShotFluidDriver::ProjectMeshSensitivities(){
   for (iZone = 0; iZone < nZone; iZone++){
-    config_container[iZone]->SetKind_SU2(3); // set SU2_DOT as solver
+    config_container[iZone]->SetKind_SU2(SU2_DOT); // set SU2_DOT as solver
     // get the dependency of the volumetric grid movement
     grid_movement[iZone][INST_0]->SetVolume_Deformation(geometry_container[iZone][INST_0][MESH_0], config_container[iZone], false, true);
   }
@@ -8713,7 +8713,7 @@ void COneShotFluidDriver::ProjectMeshSensitivities(){
       SetProjection_FD(geometry_container[iZone][INST_0][MESH_0], config_container[iZone], surface_movement[iZone] , Gradient);
     }
 
-    config_container[iZone]->SetKind_SU2(1); // set SU2_CFD as solver
+    config_container[iZone]->SetKind_SU2(SU2_CFD); // set SU2_CFD as solver
   }
 }
 

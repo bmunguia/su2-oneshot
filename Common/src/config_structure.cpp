@@ -8032,6 +8032,12 @@ bool CConfig::GetVolumetric_Movement(){
       Kind_SU2 == SU2_DOT || 
       DirectDiff)
   { volumetric_movement = true;}
+
+  if (Kind_Solver == ONE_SHOT_EULER ||
+      Kind_Solver == ONE_SHOT_RANS  ||
+      Kind_Solver == ONE_SHOT_NAVIER_STOKES)
+  { volumetric_movement = true;}
+
   return volumetric_movement;
 }
 
