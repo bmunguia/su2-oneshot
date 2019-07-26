@@ -589,11 +589,12 @@ void COneShotFluidDriver::SetRecording(unsigned short kind_recording){
 
     AD::StartRecording();
 
-    if (rank == MASTER_NODE && kind_recording == MainVariables && (TimeIter % config_container[ZONE_0]->GetWrt_Sol_Freq() == 0)) {
+    if (rank == MASTER_NODE && kind_recording == MainVariables && (TimeIter == 0)) {
       cout << endl << "-------------------------------------------------------------------------" << endl;
       cout << "Direct iteration to store the primal computational graph." << endl;
       cout << "Combined recording of flow and design variables." << endl;
       cout << "Compute residuals to check the convergence of the direct problem." << endl;
+      cout << "-------------------------------------------------------------------------" << endl << endl;
     }
 
     for (iZone = 0; iZone < nZone; iZone++) {
