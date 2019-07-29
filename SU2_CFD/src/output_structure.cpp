@@ -4734,7 +4734,7 @@ void COutput::SetConvHistory_Body(ofstream *ConvHist_file,
     adj_turb_resid[1000],
     begin_fem[1000], fem_coeff[1000], heat_resid[1000], combo_obj[1000],
     fem_resid[1000], end[1000], end_fem[1000], surface_outputs[1000], d_surface_outputs[1000], d_direct_coeff[1000], turbo_coeff[10000],
-    one_shot_coeff[1000];
+    one_shot_coeff[1000], constr_coeff[1000];
 
 
     su2double dummy = 0.0, *Coord;
@@ -5307,7 +5307,10 @@ void COutput::SetConvHistory_Body(ofstream *ConvHist_file,
 
             if (one_shot) {
               SPRINTF (one_shot_coeff, ", %14.8e", ObjFunc_Value);
-              if(config[val_iZone]->GetnConstr()>0) SPRINTF (one_shot_coeff, ", %14.8e", ConFunc_Value);
+              if(config[val_iZone]->GetnConstr()>0) {
+                SPRINTF (constr_coeff, ", %14.8e", ConFunc_Value);
+                strcat(one_shot_coeff, constr_coeff);
+              }
             }
             
             if (direct_diff != NO_DERIVATIVE) {

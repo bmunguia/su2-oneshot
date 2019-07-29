@@ -2490,8 +2490,8 @@ void CConfig::SetConfig_Options() {
   /*!\brief ONE_LS_COUNTER \n DESCRIPTION: Maximum line search counter in one-shot method \ingroup Config*/
   addUnsignedShortOption("OS_LS_COUNTER", OS_LS_MaxCounter, 15);
 
-  /*!\brief CONSTRAINT_FUNCTION \n DESCRIPTION: List of constraint functions \ingroup Config*/
-  addEnumListOption("CONSTRAINT_FUNCTION", nConstr, Kind_ConstrFunc, Objective_Map);
+  /*!\brief CONSTR_FUNCTION \n DESCRIPTION: List of constraint functions \ingroup Config*/
+  addEnumListOption("CONSTR_FUNCTION", nConstr, Kind_ConstrFunc, Objective_Map);
 
   /*!\brief MULTIPLIER_START  \n DESCRIPTION: Starting values for multiplier \ingroup Config*/
   addDoubleListOption("MULTIPLIER_START", nConstrHelp, Multiplier_Start);

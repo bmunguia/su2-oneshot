@@ -213,6 +213,16 @@ void COneShotFluidDriver::Run(){
   /*--- If convergence was reached --*/
   StopCalc = integration_container[ZONE_0][INST_0][ADJFLOW_SOL]->GetConvergence();
 
+  /*--- Store objective and constraint for screen/history output ---*/
+  solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->SetObjFunc_Value(ObjFunc);
+
+  if(config_container[ZONE_0]->GetnConstr()>0) {
+    solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->SetConFunc_Value(0.0);
+    for(unsigned short iConstr = 0; iConstr < config_container[ZONE_0]->GetnConstr(); iConstr++){
+      solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->AddConFunc_Value(ConstrFunc[iConstr]);
+    }
+  }
+
   /*--- Write the convergence history for the fluid (only screen output) ---*/
 
   /*--- The logic is right now case dependent ----*/
@@ -1309,7 +1319,6 @@ void COneShotFluidDriver::CalculateLagrangian(bool augmented){
     }
   }
 
-  solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->SetObjFunc_Value(ObjFunc);
 }
 
 su2double COneShotFluidDriver::ProjectionSet(unsigned short iDV, su2double value, bool active){
@@ -1639,9 +1648,7 @@ void COneShotFluidDriver::UpdateMultiplier(su2double stepsize){
 }
 
 void COneShotFluidDriver::StoreConstrFunction(){
-  solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->SetConFunc_Value(0.0);
   for(unsigned short iConstr = 0; iConstr < config_container[ZONE_0]->GetnConstr(); iConstr++){
     ConstrFunc_Store[iConstr] = ConstrFunc[iConstr];
-    solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->AddConFunc_Value(ConstrFunc[iConstr]);
   }
 }

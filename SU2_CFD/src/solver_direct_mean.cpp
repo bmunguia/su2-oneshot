@@ -7829,7 +7829,7 @@ su2double CEulerSolver::Evaluate_ConstrFunc(CConfig *config, unsigned short iCon
 
   /*--- TODO: markers ---*/
 
-  for (iMarker_Monitoring = 0; iMarker_Monitoring < 1; iMarker_Monitoring++) {
+  for (iMarker_Monitoring = 0; iMarker_Monitoring < config->GetnMarker_Monitoring(); iMarker_Monitoring++) {
 
     Kind_ConstrFunc = config->GetKind_ConstrFunc(iConstr);
 
