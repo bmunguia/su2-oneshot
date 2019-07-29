@@ -2475,23 +2475,23 @@ void CConfig::SetConfig_Options() {
   /*!\brief DV_BOUND \n DESCRIPTION: Lower and upper bound of design variables \ingroup Config*/
   addDoubleOption("DV_BOUND", DV_Bound, 0.005);
 
-  /*!\brief OS_HESSIAN_ID \n DESCRIPTION: Indicates if the Hessian is reset by its identity \ingroup Config*/
-  addBoolOption("OS_HESSIAN_ID", OS_Hessian_ID, false);
+  /*!\brief ONE_SHOT_HESSIAN_ID \n DESCRIPTION: Indicates if the Hessian is reset by its identity \ingroup Config*/
+  addBoolOption("ONE_SHOT_HESSIAN_ID", OS_Hessian_ID, false);
 
-  /*!\brief OS_CHECK_DESCENT \n DESCRIPTION: Indicates if the descent direction condition is checked in line search \ingroup Config*/
-  addBoolOption("OS_CHECK_DESCENT", OS_Check_Descent, false);
+  /*!\brief ONE_SHOT_CHECK_DESCENT \n DESCRIPTION: Indicates if the descent direction condition is checked in line search \ingroup Config*/
+  addBoolOption("ONE_SHOT_CHECK_DESCENT", OS_Check_Descent, false);
 
-  /*!\brief OS_LAGRANGE \n DESCRIPTION: Indicates if Lagrange function in line search only considers design update \ingroup Config*/
-  addBoolOption("OS_LAGRANGE", OS_Lagrange, false);
+  /*!\brief ONE_SHOT_LAGRANGE \n DESCRIPTION: Indicates if Lagrange function in line search only considers design update \ingroup Config*/
+  addBoolOption("ONE_SHOT_LAGRANGE", OS_Lagrange, false);
 
-  /*!\brief OS_LS_UPDATE \n DESCRIPTION: Indicates if the primal and dual updates are integrated in the line search \ingroup Config*/
-  addBoolOption("OS_LS_UPDATE", OS_LS_PrimalDual, false);
+  /*!\brief ONE_SHOT_LS_UPDATE \n DESCRIPTION: Indicates if the primal and dual updates are integrated in the line search \ingroup Config*/
+  addBoolOption("ONE_SHOT_LS_UPDATE", OS_LS_PrimalDual, false);
 
-  /*!\brief ONE_LS_COUNTER \n DESCRIPTION: Maximum line search counter in one-shot method \ingroup Config*/
-  addUnsignedShortOption("OS_LS_COUNTER", OS_LS_MaxCounter, 15);
+  /*!\brief ONE_SHOT_LS_COUNTER \n DESCRIPTION: Maximum line search counter in one-shot method \ingroup Config*/
+  addUnsignedShortOption("ONE_SHOT_LS_COUNTER", OS_LS_MaxCounter, 15);
 
-  /*!\brief CONSTR_FUNCTION \n DESCRIPTION: List of constraint functions \ingroup Config*/
-  addEnumListOption("CONSTR_FUNCTION", nConstr, Kind_ConstrFunc, Objective_Map);
+  /*!\brief CONSTRAINT_FUNCTION \n DESCRIPTION: List of constraint functions \ingroup Config*/
+  addEnumListOption("CONSTRAINT_FUNCTION", nConstr, Kind_ConstrFunc, Objective_Map);
 
   /*!\brief MULTIPLIER_START  \n DESCRIPTION: Starting values for multiplier \ingroup Config*/
   addDoubleListOption("MULTIPLIER_START", nConstrHelp, Multiplier_Start);

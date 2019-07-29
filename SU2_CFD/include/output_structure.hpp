@@ -912,6 +912,15 @@ public:
    * \param[in] val_nZone - iZone index.
    */
   void LoadLocalData_AdjFlow(CConfig *config, CGeometry *geometry, CSolver **solver, unsigned short val_iZone);
+
+  /*!
+   * \brief Load the desired solution data into a structure used for parallel reordering and output file writing for one-shot problems.
+   * \param[in] config - Definition of the particular problem.
+   * \param[in] geometry - Geometrical definition of the problem.
+   * \param[in] solution - Flow, adjoint or linearized solution.
+   * \param[in] val_nZone - iZone index.
+   */
+  void LoadLocalData_OneShot(CConfig *config, CGeometry *geometry, CSolver **solver, unsigned short val_iZone);
   
   /*!
    * \brief Load the desired solution data into a structure used for parallel reordering and output file writing for elasticity problems.
