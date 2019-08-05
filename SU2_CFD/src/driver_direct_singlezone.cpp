@@ -261,6 +261,27 @@ void CSinglezoneDriver::Output(unsigned long TimeIter) {
     /*--- Execute the routine for writing special output. ---*/
     output->SetSpecial_Output(solver_container, geometry_container, config_container, TimeIter, nZone);
 
+    switch(config_container[ZONE_0]->GetKind_Solver()) {
+      case ONE_SHOT_EULER: case ONE_SHOT_RANS: case ONE_SHOT_NAVIER_STOKES:
+        if (rank == MASTER_NODE) cout << "Write deformed grid files." << endl;
+  
+        /*--- Output deformed grid for visualization, if requested (surface and volumetric), in parallel
+         requires to move all the data to the master node---*/
+        
+        bool NewFile = true;
+        bool SU2File = true;
+        
+        output->SetMesh_Files(geometry_container[ZONE_0][INST_0], config_container, nZone, NewFile, SU2File);
+        
+        /*--- Write the the free-form deformation boxes after deformation. ---*/
+          
+        if (rank == MASTER_NODE) cout << "Adding any FFD information to the SU2 file." << endl;
+          
+        surface_movement[ZONE_0]->WriteFFDInfo(surface_movement, geometry_container[ZONE_0][INST_0], config_container);
+          
+        break;
+    }
+
 
     if (rank == MASTER_NODE) cout << "-------------------------------------------------------------------------" << endl << endl;
 

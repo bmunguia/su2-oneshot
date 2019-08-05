@@ -393,7 +393,8 @@ void CDiscAdjSinglezoneDriver::SetObjFunction(){
   /*--- Scale objective for one-shot ---*/
   switch (config->GetKind_Solver()) {
     case ONE_SHOT_EULER: case ONE_SHOT_NAVIER_STOKES: case ONE_SHOT_RANS:
-    ObjFunc *= config->GetObjScale();
+      ObjFunc *= config->GetObjScale();
+      break;
   }
 
   if (rank == MASTER_NODE){
