@@ -1085,7 +1085,7 @@ private:
   bool uq_permute;              /*!< \brief Permutation of eigenvectors */
 
   bool One_Shot; /*!< \brief option for one-shot optimization method */
-  bool OS_Hessian_ID; /*!< \brief flag for reset of the Hessian to Identity in one-shot method */
+  bool BFGS_Reset; /*!< \brief flag for reset of the Hessian to Identity in one-shot method */
   bool Piggy_Back; /*!< \brief option for piggy-back method */
   bool Quasi_Newton; /*!< \brief option for quasi-Newton method */
   unsigned long One_Shot_Start; /*!< \brief Start iteration for one-shot method */
@@ -9194,7 +9194,7 @@ public:
    * \brief Check if the Hessian reset is done using the identity matrix.
    * \return YES if identity matrix shall be used.
    */
-  bool GetOSHessianIdentity(void);
+  bool GetBoolBFGSReset(void);
 
   /*!
    * \brief Get the iteration number for starting the one-shot method.

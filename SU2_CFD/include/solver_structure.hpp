@@ -4426,7 +4426,7 @@ public:
   /*!
    * \brief A virtual member.
    */
-  virtual void CalculateAlphaBeta();
+  virtual void CalculateAlphaBeta(CConfig *config);
 
   /*!
    * \brief A virtual member.
@@ -15808,7 +15808,7 @@ public:
   /*!
    * \brief Calculate estimates for alpha and beta of the doubly augmented Lagrangian
    */
-  void CalculateAlphaBeta();
+  void CalculateAlphaBeta(CConfig *config);
 
   /*!
    * \brief Set alpha and beta to the calculated estimates.

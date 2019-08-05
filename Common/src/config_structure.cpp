@@ -2467,16 +2467,13 @@ void CConfig::SetConfig_Options() {
   addDoubleOption("DESIGN_SCALE", OS_Design_Scale, 1E-0);
 
   /*!\brief OBJ_SCALE \n DESCRIPTION: Scaling of objective function for optimization \ingroup Config*/
-  addDoubleOption("OBJ_SCALE", Obj_Func_Scale, 1E-3);
+  addDoubleOption("OBJ_SCALE", Obj_Func_Scale, 1E-0);
 
   /*!\brief SENS_SCALE \n DESCRIPTION: Scaling of sensitivities for optimization \ingroup Config*/
   addDoubleOption("SENS_SCALE", OS_Sens_Scale, 1E-0);
 
   /*!\brief DV_BOUND \n DESCRIPTION: Lower and upper bound of design variables \ingroup Config*/
-  addDoubleOption("DV_BOUND", DV_Bound, 0.005);
-
-  /*!\brief ONE_SHOT_HESSIAN_ID \n DESCRIPTION: Indicates if the Hessian is reset by its identity \ingroup Config*/
-  addBoolOption("ONE_SHOT_HESSIAN_ID", OS_Hessian_ID, false);
+  addDoubleOption("ONE_SHOT_DV_BOUND", DV_Bound, 1E9);
 
   /*!\brief ONE_SHOT_CHECK_DESCENT \n DESCRIPTION: Indicates if the descent direction condition is checked in line search \ingroup Config*/
   addBoolOption("ONE_SHOT_CHECK_DESCENT", OS_Check_Descent, false);
@@ -2508,6 +2505,9 @@ void CConfig::SetConfig_Options() {
   /*!\brief BFGS_INIT \n DESCRIPTION: Indicates if an approximation of the inital inverse is calculated for BFGS or LBFGS \ingroup Config*/
   addBoolOption("BFGS_INIT", BFGS_Init, false);
 
+  /*!\brief BFGS_RESET \n DESCRIPTION: Indicates if the Hessian is reset by its identity \ingroup Config*/
+  addBoolOption("BFGS_RESET", BFGS_Reset, false);
+
   /*!\brief BFGS_SCALE \n DESCRIPTION: Initial Scaling of BFGS inverse \ingroup Config*/
   addDoubleOption("BFGS_SCALE", BFGS_Init_Value, 1.0);
 
@@ -2515,15 +2515,15 @@ void CConfig::SetConfig_Options() {
   addBoolOption("LBFGS", Limited_Memory_BFGS, false);
 
   /*!\brief LBFGS_ITER \n DESCRIPTION: Number of limited memory BFGS iterations to build Inverse Hessian approximation \ingroup Config*/
-  addUnsignedShortOption("LBFGS_ITER", LBFGS_Iter, 38);
+  addUnsignedShortOption("LBFGS_ITER", LBFGS_Iter, 40);
 
   /*!\brief LBFGS \n DESCRIPTION: Indicates if stepsize is set to zero if line search fails \ingroup Config*/
   addBoolOption("ZERO_STEP", Zero_Step, true);
 
   /*!\brief OS_STEP_SIZE \n DESCRIPTION: Indicates if stepsize is set to zero if line search fails \ingroup Config*/
-  addDoubleOption("OS_STEP_SIZE", Step_Size, 1.0);
+  addDoubleOption("ONE_SHOT_STEP_SIZE", Step_Size, 1.0);
 
-  addDoubleOption("BCHECK_EPSILON", BCheck_Epsilon, 1E-5);
+  addDoubleOption("BCHECK_EPSILON", BCheck_Epsilon, 1E-9);
 
   addDoubleListOption("MULTIPLIER_SCALE", nConstrHelp, MultiplierScale);
 

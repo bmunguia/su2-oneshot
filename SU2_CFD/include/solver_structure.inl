@@ -2519,7 +2519,7 @@ inline void CSolver::UpdateSensitivityLagrangian(CGeometry *geometry, su2double 
 
 inline su2double CSolver::CalculateLagrangianPart(CConfig *config, bool augmented){return 0.0;}
 
-inline void CSolver::CalculateAlphaBeta(){}
+inline void CSolver::CalculateAlphaBeta(CConfig *config){}
 
 inline void CSolver::SetAlphaBeta(CConfig *config){}
 

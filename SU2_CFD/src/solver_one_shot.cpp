@@ -135,7 +135,7 @@ void COneShotSolver::SetGeometrySensitivityGradient(CGeometry *geometry){
     unsigned long iPoint;
 
     nPoint  = geometry->GetnPoint();
-    nDim          = geometry->GetnDim();
+    nDim    = geometry->GetnDim();
 
     geometry->InitializeSensitivity();
 
@@ -151,7 +151,7 @@ void COneShotSolver::SaveSensitivity(CGeometry *geometry){
     unsigned long iPoint;
 
     nPoint  = geometry->GetnPoint();
-    nDim          = geometry->GetnDim();
+    nDim    = geometry->GetnDim();
 
     for (iPoint = 0; iPoint < nPoint; iPoint++) {
       for (iDim = 0; iDim < nDim; iDim++) {
@@ -180,14 +180,12 @@ void COneShotSolver::UpdateSensitivityLagrangian(CGeometry *geometry, su2double 
 
     nPoint  = geometry->GetnPoint();
     nDim          = geometry->GetnDim();
-//    std::cout<<"Update Factor "<<factor<<": ";
+
     for (iPoint = 0; iPoint < nPoint; iPoint++) {
       for (iDim = 0; iDim < nDim; iDim++) {
         node[iPoint]->SetSensitivity_AugmentedLagrangian(iDim, node[iPoint]->GetSensitivity_AugmentedLagrangian(iDim)+factor*node[iPoint]->GetSensitivity(iDim));
-//        std::cout<<factor*node[iPoint]->GetSensitivity(iDim)<<" ";
       }
     }
-//    std::cout<<std::endl;
 }
 
 void COneShotSolver::StoreMeshPoints(CConfig *config, CGeometry *geometry){
@@ -284,44 +282,45 @@ void COneShotSolver::LoadSaveSolution(){
   }
 }
 
-void COneShotSolver::CalculateAlphaBeta(){
+void COneShotSolver::CalculateAlphaBeta(CConfig *config){
   unsigned short iVar;
   unsigned long iPoint;
-  su2double helper=0.0, myHelper=0.0;
-  su2double normDelta=0.0, myNormDelta=0.0;
+  // su2double helper=0.0,       myHelper=0.0;
+  su2double normDelta=0.0,    myNormDelta=0.0;
   su2double normDeltaNew=0.0, myNormDeltaNew=0.0;
+
   /* --- Estimate rho and theta values --- */
   for (iPoint = 0; iPoint < nPointDomain; iPoint++){
     for (iVar = 0; iVar < nVar; iVar++){
-      normDelta += direct_solver->node[iPoint]->GetSolution_Delta(iVar)*direct_solver->node[iPoint]->GetSolution_Delta(iVar);
-      normDeltaNew += (direct_solver->node[iPoint]->GetSolution(iVar)-direct_solver->node[iPoint]->GetSolution_Store(iVar))*(direct_solver->node[iPoint]->GetSolution(iVar)-direct_solver->node[iPoint]->GetSolution_Store(iVar));
-      helper += direct_solver->node[iPoint]->GetSolution_Delta(iVar)*(node[iPoint]->GetSolution(iVar)-node[iPoint]->GetSolution_Store(iVar))-node[iPoint]->GetSolution_Delta(iVar)*(direct_solver->node[iPoint]->GetSolution(iVar)-direct_solver->node[iPoint]->GetSolution_Store(iVar));
+      myNormDelta += direct_solver->node[iPoint]->GetSolution_Delta(iVar)*direct_solver->node[iPoint]->GetSolution_Delta(iVar);
+      myNormDeltaNew += (direct_solver->node[iPoint]->GetSolution(iVar)-direct_solver->node[iPoint]->GetSolution_Store(iVar))*(direct_solver->node[iPoint]->GetSolution(iVar)-direct_solver->node[iPoint]->GetSolution_Store(iVar));
+      // myHelper += direct_solver->node[iPoint]->GetSolution_Delta(iVar)*(node[iPoint]->GetSolution(iVar)-node[iPoint]->GetSolution_Store(iVar))-node[iPoint]->GetSolution_Delta(iVar)*(direct_solver->node[iPoint]->GetSolution(iVar)-direct_solver->node[iPoint]->GetSolution_Store(iVar));
     }
   }
 
 #ifdef HAVE_MPI
-  SU2_MPI::Allreduce(&myHelper, &helper, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  // SU2_MPI::Allreduce(&myHelper, &helper, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   SU2_MPI::Allreduce(&myNormDelta, &normDelta, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   SU2_MPI::Allreduce(&myNormDeltaNew, &normDeltaNew, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
-  helper       = myHelper;
+  // helper       = myHelper;
   normDelta    = myNormDelta;
   normDeltaNew = myNormDeltaNew;
 #endif
 
-  if(sqrt(normDeltaNew)/sqrt(normDelta)>0.9*rho) rho = sqrt(normDeltaNew)/sqrt(normDelta);
-  if(fabs(helper)/normDelta>0.9*theta) theta = fabs(helper)/normDelta;
+  rho = min(max(sqrt(normDeltaNew)/sqrt(normDelta), 0.9*rho), 0.99); // Saturate contractivity
+  // theta = max(fabs(helper)/normDelta, 0.9*theta);
 
-  if (rank == MASTER_NODE) {
-    std::cout<<"Estimate: "<<sqrt(normDeltaNew)/sqrt(normDelta)<<" "<<fabs(helper)/normDelta<<std::endl;
-    std::cout<<"Rho, Theta: "<<rho<<" "<<theta<<std::endl;
-    std::cout<<"Alpha, Beta: "<<2*theta/((1-rho)*(1-rho))<<" "<<2./theta<<std::endl;
-  }
+  config->SetOneShotAlpha(2./((1-rho)*(1-rho)));
+  config->SetOneShotBeta(2.);
+
 }
 
 void COneShotSolver::SetAlphaBeta(CConfig *config){
   config->SetOneShotAlpha(2*theta/((1-rho)*(1-rho)));
   config->SetOneShotBeta(2./theta);
+  // config->SetOneShotAlpha(2./((1-rho)*(1-rho)));
+  // config->SetOneShotBeta(2.);
 }
 
 su2double COneShotSolver::CalculateLagrangianPart(CConfig *config, bool augmented){
@@ -474,7 +473,7 @@ su2double COneShotSolver::MultiplyConstrDerivative(unsigned short iConstr, unsig
 
   for (iPoint = 0; iPoint < nPointDomain; iPoint++){
     for (iVar = 0; iVar < nVar; iVar++){
-      product+= DConsVec[iConstr][iPoint][iVar]*DConsVec[jConstr][iPoint][iVar];
+      myProduct+= DConsVec[iConstr][iPoint][iVar]*DConsVec[jConstr][iPoint][iVar];
     }
   }
 

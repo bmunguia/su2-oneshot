@@ -2071,7 +2071,7 @@ inline unsigned long CConfig::GetOneShotStart(void) { return One_Shot_Start; }
 
 inline unsigned long CConfig::GetOneShotStop(void) { return One_Shot_Stop; }
 
-inline bool CConfig::GetOSHessianIdentity(void) { return OS_Hessian_ID; }
+inline bool CConfig::GetBoolBFGSReset(void) { return BFGS_Reset; }
 
 inline su2double CConfig::GetOneShotAlpha(void) { return One_Shot_Alpha; }
 
