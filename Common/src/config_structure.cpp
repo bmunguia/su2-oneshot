@@ -2455,13 +2455,13 @@ void CConfig::SetConfig_Options() {
   addUnsignedLongOption("ONE_SHOT_STOP", One_Shot_Stop, 999999);
 
   /*!\brief ONE_SHOT_ALPHA \n DESCRIPTION: Factor for first additional term in augmented Lagrangian \ingroup Config*/
-  addDoubleOption("ONE_SHOT_ALPHA", One_Shot_Alpha, 200.0);
+  addDoubleOption("ONE_SHOT_ALPHA", One_Shot_Alpha, 2000.0);
 
   /*!\brief ONE_SHOT_BETA \n DESCRIPTION: Factor for second additional term in augmented Lagrangian \ingroup Config*/
   addDoubleOption("ONE_SHOT_BETA", One_Shot_Beta, 2.0);
 
   /*!\brief ONE_SHOT_FD \n DESCRIPTION: Finite difference step size for second additional term in augmented Lagrangian \ingroup Config*/
-  addDoubleOption("ONE_SHOT_FD", One_Shot_FD, 1E-5);
+  addDoubleOption("ONE_SHOT_FD", One_Shot_FD, 1E-7);
 
   /*!\brief DESIGN_SCALE \n DESCRIPTION: Scaling of design variables for optimization \ingroup Config*/
   addDoubleOption("DESIGN_SCALE", OS_Design_Scale, 1E-0);
@@ -2478,14 +2478,8 @@ void CConfig::SetConfig_Options() {
   /*!\brief ONE_SHOT_CHECK_DESCENT \n DESCRIPTION: Indicates if the descent direction condition is checked in line search \ingroup Config*/
   addBoolOption("ONE_SHOT_CHECK_DESCENT", OS_Check_Descent, false);
 
-  /*!\brief ONE_SHOT_LAGRANGE \n DESCRIPTION: Indicates if Lagrange function in line search only considers design update \ingroup Config*/
-  addBoolOption("ONE_SHOT_LAGRANGE", OS_Lagrange, false);
-
-  /*!\brief ONE_SHOT_LS_UPDATE \n DESCRIPTION: Indicates if the primal and dual updates are integrated in the line search \ingroup Config*/
-  addBoolOption("ONE_SHOT_LS_UPDATE", OS_LS_PrimalDual, false);
-
-  /*!\brief ONE_SHOT_LS_COUNTER \n DESCRIPTION: Maximum line search counter in one-shot method \ingroup Config*/
-  addUnsignedShortOption("ONE_SHOT_LS_COUNTER", OS_LS_MaxCounter, 15);
+  /*!\brief ONE_SHOT_LS_ITER \n DESCRIPTION: Maximum line search iterations in one-shot method \ingroup Config*/
+  addUnsignedShortOption("ONE_SHOT_LS_ITER", OS_LS_MaxCounter, 15);
 
   /*!\brief CONSTRAINT_FUNCTION \n DESCRIPTION: List of constraint functions \ingroup Config*/
   addEnumListOption("CONSTRAINT_FUNCTION", nConstr, Kind_ConstrFunc, Objective_Map);

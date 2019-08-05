@@ -316,13 +316,6 @@ void COneShotSolver::CalculateAlphaBeta(CConfig *config){
 
 }
 
-void COneShotSolver::SetAlphaBeta(CConfig *config){
-  config->SetOneShotAlpha(2*theta/((1-rho)*(1-rho)));
-  config->SetOneShotBeta(2./theta);
-  // config->SetOneShotAlpha(2./((1-rho)*(1-rho)));
-  // config->SetOneShotBeta(2.);
-}
-
 su2double COneShotSolver::CalculateLagrangianPart(CConfig *config, bool augmented){
   unsigned short iVar;
   unsigned long iPoint;
@@ -460,7 +453,7 @@ void COneShotSolver::SetConstrDerivative(unsigned short iConstr){
 
   for (iPoint = 0; iPoint < nPoint; iPoint++){
     for (iVar = 0; iVar < nVar; iVar++){
-      DConsVec[iConstr][iPoint][iVar]=node[iPoint]->GetSolution(iVar);;
+      DConsVec[iConstr][iPoint][iVar]=node[iPoint]->GetSolution(iVar);
     }
   }
 

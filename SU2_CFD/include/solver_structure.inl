@@ -2521,8 +2521,6 @@ inline su2double CSolver::CalculateLagrangianPart(CConfig *config, bool augmente
 
 inline void CSolver::CalculateAlphaBeta(CConfig *config){}
 
-inline void CSolver::SetAlphaBeta(CConfig *config){}
-
 inline void CSolver::StoreSolution(){}
 
 inline void CSolver::LoadSolution(){}

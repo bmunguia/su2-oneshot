@@ -1097,8 +1097,8 @@ private:
   su2double OS_Sens_Scale; /*!< \brief Value for scaling the geometry sensitivities */
   su2double DV_Bound; /*!< \brief Value for design variable lower and upper bound */
   bool OS_Check_Descent; /*!< \brief option for a descent check in the line search */
-  bool OS_Lagrange; /*!< \brief option for a line search based on the design updated Lagrangian */
-  bool OS_LS_PrimalDual; /*!< \brief option for a line search including the primal and dual update */
+  // bool OS_Lagrange; /*!< \brief option for a line search based on the design updated Lagrangian */
+  // bool OS_LS_PrimalDual; /*!< \brief option for a line search including the primal and dual update */
   unsigned short OS_LS_MaxCounter; /*!< \brief Maximum line search counter */
   unsigned short *Kind_ConstrFunc;  /*!< \brief Kind of constraint functions. */
   unsigned short nConstr, nConstrHelp;              /*! \brief Number of constraint functions. */
@@ -9267,18 +9267,6 @@ public:
    * \return YES if the algorithm checks for a descent direction.
    */
   bool GetCheckDescent(void);
-
-  /*!
-   * \brief Check if the line search in one-shot is based on the design updated Lagrangian.
-   * \return YES if the update only in the design is considered in the line search.
-   */
-  bool GetOneShotLagrange(void);
-
-  /*!
-   * \brief Check if the line search in one-shot is also for primal and dual.
-   * \return YES if the update in the primal and dual is considered.
-   */
-  bool GetOneShotPartStep(void);
 
   /*!
    * \brief Maximum line search counter for one-shot.

@@ -4430,12 +4430,6 @@ public:
 
   /*!
    * \brief A virtual member.
-   * \param[in] config - config class object
-   */
-  virtual void SetAlphaBeta(CConfig *config);
-
-  /*!
-   * \brief A virtual member.
    * \param[in] geometry - geometry class object
    */
   virtual void ResetSensitivityLagrangian(CGeometry *geometry);
@@ -15809,12 +15803,6 @@ public:
    * \brief Calculate estimates for alpha and beta of the doubly augmented Lagrangian
    */
   void CalculateAlphaBeta(CConfig *config);
-
-  /*!
-   * \brief Set alpha and beta to the calculated estimates.
-   * \param[in] config - The particular config.
-   */
-  void SetAlphaBeta(CConfig *config);
 
   /*!
    * \brief Sets the adjoint values of the input variables of the flow (+turb.) iteration

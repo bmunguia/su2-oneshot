@@ -1780,7 +1780,7 @@ public:
   /*!
    * \brief Find the indices for the epsilon-active set (overestimated).
    */
-  void ComputeActiveSet();
+  void ComputeActiveSet(su2double stepsize);
 
   /*!
    * \brief Project mesh sensitivities to surface and design variables using AD.
