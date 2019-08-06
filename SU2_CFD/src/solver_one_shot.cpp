@@ -311,8 +311,13 @@ void COneShotSolver::CalculateAlphaBeta(CConfig *config){
   rho = min(max(sqrt(normDeltaNew)/sqrt(normDelta), 0.9*rho), 0.99); // Saturate contractivity
   // theta = max(fabs(helper)/normDelta, 0.9*theta);
 
-  config->SetOneShotAlpha(2./((1-rho)*(1-rho)));
-  config->SetOneShotBeta(2.);
+  su2double alpha = 2./((1.-rho)*(1.-rho));
+  su2double beta  = 2.;
+  su2double sigma = 1. - rho - (1. + beta/2.)*(1. + beta/2.)/(alpha*beta*(1.-rho));
+
+  config->SetOneShotAlpha(alpha);
+  config->SetOneShotBeta(beta);
+  config->SetOneShotSigma(sigma);
 
 }
 

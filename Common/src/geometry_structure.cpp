@@ -3652,6 +3652,10 @@ CPhysicalGeometry::CPhysicalGeometry(CConfig *config, unsigned short val_iZone, 
                            (config->GetKind_Solver() == DISC_ADJ_FEM_NS)    ||
                            (config->GetKind_Solver() == DISC_ADJ_FEM_RANS));
 
+  const bool one_shot = ((config->GetKind_Solver() == ONE_SHOT_EULER)         ||
+                         (config->GetKind_Solver() == ONE_SHOT_NAVIER_STOKES) ||
+                         (config->GetKind_Solver() == ONE_SHOT_RANS));
+
   /*--- Initialize counters for local/global points & elements ---*/
   
   if (rank == MASTER_NODE)
@@ -3714,7 +3718,7 @@ CPhysicalGeometry::CPhysicalGeometry(CConfig *config, unsigned short val_iZone, 
   
   /*--- If SU2_DEF then write a file with the boundary information ---*/
   
-  if ((config->GetKind_SU2() == SU2_DEF) && (rank == MASTER_NODE)) {
+  if (((config->GetKind_SU2() == SU2_DEF) || one_shot) && (rank == MASTER_NODE)) {
 
     string str = "boundary.dat";
 

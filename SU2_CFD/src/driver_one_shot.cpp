@@ -345,10 +345,10 @@ void COneShotFluidDriver::RunOneShot(){
   UpdateMultiplier(1.0);
   PrimalDualStep();
   /*--- Estimate Alpha and Beta ---*/
-    if(TimeIter > config_container[ZONE_0]->GetOneShotStart()+1) {
-      solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->CalculateAlphaBeta(config_container[ZONE_0]);
-    }
-    CalculateLagrangian(true);
+  if(TimeIter > config_container[ZONE_0]->GetOneShotStart() && TimeIter > 2) {
+    solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->CalculateAlphaBeta(config_container[ZONE_0]);
+  }
+  CalculateLagrangian(true);
 
   if(TimeIter>=config_container[ZONE_0]->GetOneShotStart() && TimeIter<config_container[ZONE_0]->GetOneShotStop()){
 
@@ -1011,6 +1011,7 @@ void COneShotFluidDriver::BFGSUpdate(CConfig *config){
     su2double vk=0;
     su2double normyk=0;
     su2double normsk=0;
+    su2double sigma=config->GetOneShotSigma();
 
     yk=new su2double[nDV_Total];
     sk=new su2double[nDV_Total];
@@ -1044,7 +1045,7 @@ void COneShotFluidDriver::BFGSUpdate(CConfig *config){
       }
       for (iDV=0;iDV<nDV_Total;iDV++){
         for (jDV=0;jDV<nDV_Total;jDV++){
-          BFGS_Inv[iDV][jDV]=MatA[iDV][jDV];
+          BFGS_Inv[iDV][jDV]=sigma*MatA[iDV][jDV];
         }
       }
       for (iDV=0;iDV<nDV_Total;iDV++){
@@ -1064,7 +1065,7 @@ void COneShotFluidDriver::BFGSUpdate(CConfig *config){
         for (iDV = 0; iDV < nDV_Total; iDV++){
           for (jDV = 0; jDV < nDV_Total; jDV++){
             BFGS_Inv[iDV][jDV]=0.0;
-            if(iDV==jDV){ BFGS_Inv[iDV][jDV]=ProjectionSet(iDV,BFGS_Init,false); }
+            if(iDV==jDV){ BFGS_Inv[iDV][jDV]=ProjectionSet(iDV,sigma*BFGS_Init,false); }
           }
         }
       }
