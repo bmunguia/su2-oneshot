@@ -313,11 +313,9 @@ void COneShotSolver::CalculateAlphaBeta(CConfig *config){
 
   su2double alpha = 2./((1.-rho)*(1.-rho));
   su2double beta  = 2.;
-  su2double sigma = 1. - rho - (1. + beta/2.)*(1. + beta/2.)/(alpha*beta*(1.-rho));
 
   config->SetOneShotAlpha(alpha);
   config->SetOneShotBeta(beta);
-  config->SetOneShotSigma(sigma);
 
 }
 
