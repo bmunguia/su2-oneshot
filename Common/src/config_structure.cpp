@@ -2515,7 +2515,7 @@ void CConfig::SetConfig_Options() {
   addUnsignedShortOption("LBFGS_ITER", LBFGS_Iter, 40);
 
   /*!\brief LBFGS \n DESCRIPTION: Indicates if stepsize is set to zero if line search fails \ingroup Config*/
-  addBoolOption("ZERO_STEP", Zero_Step, true);
+  addBoolOption("ZERO_STEP", Zero_Step, false);
 
   /*!\brief OS_STEP_SIZE \n DESCRIPTION: Indicates if stepsize is set to zero if line search fails \ingroup Config*/
   addDoubleOption("ONE_SHOT_STEP_SIZE", Step_Size, 1.0);
@@ -2524,7 +2524,7 @@ void CConfig::SetConfig_Options() {
 
   addDoubleListOption("MULTIPLIER_SCALE", nConstrHelp, MultiplierScale);
 
-  addBoolOption("CONST_PRECOND", Constant_Preconditioner, true);
+  addBoolOption("CONST_PRECOND", Constant_Preconditioner, false);
 
   addBoolOption("PROJECTION_AD", Projection_AD, true);
   

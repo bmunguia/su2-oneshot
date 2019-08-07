@@ -1624,6 +1624,8 @@ protected:
 
   su2double BFGS_Init;
 
+  bool update; /*!< \brief Flag for whether the geometry has been updated (and whether to update the dual grid).*/
+
 public:
 
   /*!

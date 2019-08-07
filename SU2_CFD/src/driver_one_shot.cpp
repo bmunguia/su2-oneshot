@@ -131,7 +131,7 @@ COneShotFluidDriver::COneShotFluidDriver(char* confFile,
     surface_movement[iZone] = new CSurfaceMovement();
   }
 
-
+  update = false;
 
 }
 
@@ -246,6 +246,7 @@ void COneShotFluidDriver::RunOneShot(){
     solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreFormerSolution();
     solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreMeshPoints(config_container[iZone], geometry_container[iZone][INST_0][MESH_0]);
   }
+
   /*--- This is the line search loop that is only called once, if no update is performed ---*/
   do {
 
@@ -300,6 +301,13 @@ void COneShotFluidDriver::RunOneShot(){
           TimeIter<config_container[ZONE_0]->GetOneShotStop() &&
           (!CheckFirstWolfe()) && whilecounter<maxcounter+1);
 
+  /*--- Update the dual grid ---*/
+  if(update) {
+    for (iZone = 0; iZone < nZone; iZone++){
+      grid_movement[iZone][INST_0]->UpdateDualGrid(geometry_container[iZone][INST_0][MESH_0], config_container[iZone]);
+    }
+  }
+
   if (whilecounter==maxcounter+1){
     descent = false;
     if(config_container[ZONE_0]->GetZeroStep()) stepsize = 0.0;
@@ -342,12 +350,15 @@ void COneShotFluidDriver::RunOneShot(){
     solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->ShiftFormerSolution();
     solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadSolution();
   }
+
   UpdateMultiplier(1.0);
   PrimalDualStep();
+
   /*--- Estimate Alpha and Beta ---*/
   if(TimeIter > config_container[ZONE_0]->GetOneShotStart() && TimeIter > 2) {
     solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->CalculateAlphaBeta(config_container[ZONE_0]);
   }
+
   CalculateLagrangian(true);
 
   if(TimeIter>=config_container[ZONE_0]->GetOneShotStart() && TimeIter<config_container[ZONE_0]->GetOneShotStop()){
@@ -876,7 +887,7 @@ void COneShotFluidDriver::SetProjection_FD(CGeometry *geometry, CConfig *config,
 
     else {
       if (rank == MASTER_NODE)
-        cout << "Design Variable not implement yet." << endl;
+        cout << "Design Variable not implemented yet." << endl;
     }
 
     /*--- Load the delta change in the design variable (finite difference step). ---*/
@@ -998,7 +1009,7 @@ void COneShotFluidDriver::SurfaceDeformation(CGeometry *geometry, CConfig *confi
 
   } else if (config->GetDesign_Variable(0) != FFD_SETTING) {
 
-    grid_movement->SetVolume_Deformation(geometry, config, false);
+    grid_movement->SetVolume_Deformation(geometry, config, false, false);
 
   }
 
@@ -1058,8 +1069,6 @@ void COneShotFluidDriver::BFGSUpdate(CConfig *config){
       }
 
     }else{
-      if(rank == MASTER_NODE)
-        // cout<<"!Attention: Hessian not positive definite - Reset Preconditioner!"<<endl;
       if(config->GetBoolBFGSReset()){
         for (iDV = 0; iDV < nDV_Total; iDV++){
           for (jDV = 0; jDV < nDV_Total; jDV++){
@@ -1223,6 +1232,7 @@ void COneShotFluidDriver::UpdateDesignVariable(){
   for (iDV=0; iDV<nDV_Total; iDV++){
     DesignVariable[iDV] += DesignVarUpdate[iDV];
   }
+  update = true;
 }
 
 void COneShotFluidDriver::CalculateLagrangian(bool augmented){
