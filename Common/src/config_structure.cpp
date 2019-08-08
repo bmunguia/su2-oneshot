@@ -2464,7 +2464,7 @@ void CConfig::SetConfig_Options() {
   addDoubleOption("ONE_SHOT_SIGMA", One_Shot_Sigma, 1.0);
 
   /*!\brief ONE_SHOT_FD \n DESCRIPTION: Finite difference step size for second additional term in augmented Lagrangian \ingroup Config*/
-  addDoubleOption("ONE_SHOT_FD", One_Shot_FD, 1E-7);
+  addDoubleOption("ONE_SHOT_FD", One_Shot_FD, 1E-6);
 
   /*!\brief DESIGN_SCALE \n DESCRIPTION: Scaling of design variables for optimization \ingroup Config*/
   addDoubleOption("DESIGN_SCALE", OS_Design_Scale, 1E-0);
@@ -2515,7 +2515,7 @@ void CConfig::SetConfig_Options() {
   addUnsignedShortOption("LBFGS_ITER", LBFGS_Iter, 40);
 
   /*!\brief LBFGS \n DESCRIPTION: Indicates if stepsize is set to zero if line search fails \ingroup Config*/
-  addBoolOption("ZERO_STEP", Zero_Step, false);
+  addBoolOption("ONE_SHOT_ZERO_STEP", Zero_Step, true);
 
   /*!\brief OS_STEP_SIZE \n DESCRIPTION: Indicates if stepsize is set to zero if line search fails \ingroup Config*/
   addDoubleOption("ONE_SHOT_STEP_SIZE", Step_Size, 1.0);
