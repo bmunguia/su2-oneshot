@@ -260,19 +260,11 @@ void COneShotFluidDriver::RunOneShot(){
         }
       }
 
-      if(whilecounter==0){
-        //Load the old solution for line search (either y_k or y_k-1)
-        for (iZone = 0; iZone < nZone; iZone++){
-          solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadSolution();
-        }
+      //Load the old solution for line search (either y_k or y_k-1)
+      for (iZone = 0; iZone < nZone; iZone++){
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadSolution();
       }
-      else{
-        //Update the old solution with stepsize and load it
-        for (iZone = 0; iZone < nZone; iZone++){
-          solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadSolutionStep(stepsize);
-          solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreSolution();
-        }
-      }
+
 
       /*--- Do a design update based on the search direction (mesh deformation with stepsize) ---*/
       if (whilecounter!=maxcounter || (!config_container[ZONE_0]->GetZeroStep())) ComputeDesignVarUpdate(stepsize);
@@ -305,7 +297,7 @@ void COneShotFluidDriver::RunOneShot(){
 
   if ((whilecounter==maxcounter+1) && config_container[ZONE_0]->GetZeroStep()) stepsize = 0.0;
 
-  if(TimeIter>=config_container[ZONE_0]->GetOneShotStart()&&TimeIter<config_container[ZONE_0]->GetOneShotStop()){
+  if(TimeIter>config_container[ZONE_0]->GetOneShotStart() && TimeIter<config_container[ZONE_0]->GetOneShotStop()){
     //Evaluate sensitivity of augmented Lagrangian for an update only in the design
     /*--- N_u ---*/
     for (iZone = 0; iZone < nZone; iZone++){

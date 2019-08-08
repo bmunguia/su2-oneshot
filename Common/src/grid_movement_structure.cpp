@@ -3742,7 +3742,7 @@ void CSurfaceMovement::CheckFFDIntersections(CGeometry *geometry, CConfig *confi
     
     /*--- Screen output ---*/
     
-    if (rank == MASTER_NODE) {
+    if (rank == MASTER_NODE && !oneshot) {
       
       if (IPlane_Intersect_A || IPlane_Intersect_B ||
           JPlane_Intersect_A || JPlane_Intersect_B ||
