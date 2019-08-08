@@ -7597,6 +7597,13 @@ void CSurfaceMovement::MergeFFDInfo(CGeometry *geometry, CConfig *config) {
   /*--- Total number of points in each FFD box. ---*/
   
   for (iFFDBox = 0 ; iFFDBox < nFFDBox; iFFDBox++) {
+
+    /*--- Free memory in case vectors were previously filled. ---*/
+    vector<su2double>().swap(GlobalCoordX[iFFDBox]);
+    vector<su2double>().swap(GlobalCoordY[iFFDBox]);
+    vector<su2double>().swap(GlobalCoordZ[iFFDBox]);
+    vector<string>().swap(GlobalTag[iFFDBox]);
+    vector<unsigned long>().swap(GlobalPoint[iFFDBox]);
     
     /*--- Loop over the mesh to collect the coords of the local points. ---*/
     
@@ -7643,6 +7650,13 @@ void CSurfaceMovement::MergeFFDInfo(CGeometry *geometry, CConfig *config) {
   if (rank == MASTER_NODE) Buffer_Recv_nPoint = new unsigned long[nProcessor];
   
   for (iFFDBox = 0 ; iFFDBox < nFFDBox; iFFDBox++) {
+
+    /*--- Free memory in case vectors were previously filled. ---*/
+    vector<su2double>().swap(GlobalCoordX[iFFDBox]);
+    vector<su2double>().swap(GlobalCoordY[iFFDBox]);
+    vector<su2double>().swap(GlobalCoordZ[iFFDBox]);
+    vector<string>().swap(GlobalTag[iFFDBox]);
+    vector<unsigned long>().swap(GlobalPoint[iFFDBox]);
     
     nLocalPoint = 0;
     for (iPoint = 0; iPoint < FFDBox[iFFDBox]->GetnSurfacePoint(); iPoint++) {
@@ -7796,7 +7810,7 @@ void CSurfaceMovement::MergeFFDInfo(CGeometry *geometry, CConfig *config) {
   
 }
 
-void CSurfaceMovement::WriteFFDInfo(CSurfaceMovement** surface_movement, CGeometry **geometry, CConfig **config) {
+void CSurfaceMovement::WriteFFDInfo(CSurfaceMovement** surface_movement, CGeometry **geometry, CConfig **config, bool append) {
   
   
   unsigned short iOrder, jOrder, kOrder, iFFDBox, iCornerPoints, iParentFFDBox, iChildFFDBox, iZone;
@@ -7856,7 +7870,8 @@ void CSurfaceMovement::WriteFFDInfo(CSurfaceMovement** surface_movement, CGeomet
     strcpy (cstr, mesh_file);
     
     output_file.precision(15);
-    output_file.open(cstr, ios::out | ios::app);
+    if (append) output_file.open(cstr, ios::out | ios::app);
+    else        output_file.open(cstr, ios::out);
     
     if (nFFDBox != 0) {
       output_file << "FFD_NBOX= " << nFFDBox << endl;

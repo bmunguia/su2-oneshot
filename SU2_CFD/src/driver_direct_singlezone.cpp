@@ -277,7 +277,7 @@ void CSinglezoneDriver::Output(unsigned long TimeIter) {
           
         if (rank == MASTER_NODE) cout << "Adding any FFD information to the SU2 file." << endl;
           
-        surface_movement[ZONE_0]->WriteFFDInfo(surface_movement, geometry_container[ZONE_0][INST_0], config_container);
+        surface_movement[ZONE_0]->WriteFFDInfo(surface_movement, geometry_container[ZONE_0][INST_0], config_container, true);
           
         break;
     }

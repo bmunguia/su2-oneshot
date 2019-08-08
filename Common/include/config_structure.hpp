@@ -5357,6 +5357,11 @@ public:
   bool GetInvDesign_HeatFlux(void);
   
   /*!
+   * \brief Set name of the input grid.
+   */
+  void SetMesh_FileName(string val_filename);
+
+  /*!
    * \brief Get name of the input grid.
    * \return File name of the input grid.
    */

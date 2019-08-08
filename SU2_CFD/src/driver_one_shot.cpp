@@ -257,6 +257,7 @@ void COneShotFluidDriver::RunOneShot(){
         /*---Load the old design for line search---*/
         for (iZone = 0; iZone < nZone; iZone++){
           solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadMeshPoints(config_container[iZone], geometry_container[iZone][INST_0][MESH_0]);
+          grid_movement[iZone][INST_0]->UpdateDualGrid(geometry_container[iZone][INST_0][MESH_0], config_container[iZone]);
         }
       }
 
@@ -288,11 +289,12 @@ void COneShotFluidDriver::RunOneShot(){
           TimeIter<config_container[ZONE_0]->GetOneShotStop() &&
           (!CheckFirstWolfe()) && whilecounter<maxcounter+1);
 
-  /*--- Update the dual grid ---*/
-  if(update) {
-    for (iZone = 0; iZone < nZone; iZone++){
-      grid_movement[iZone][INST_0]->UpdateDualGrid(geometry_container[iZone][INST_0][MESH_0], config_container[iZone]);
-    }
+  /*--- Store FFD info in file ---*/
+  if (((config_container[ZONE_0]->GetDesign_Variable(0) == FFD_CONTROL_POINT_2D) ||
+       (config_container[ZONE_0]->GetDesign_Variable(0) == FFD_CONTROL_POINT))   &&
+       update) {
+    surface_movement[ZONE_0]->WriteFFDInfo(surface_movement, geometry_container[ZONE_0][INST_0], config_container, false);
+    config_container[ZONE_0]->SetMesh_FileName(config_container[ZONE_0]->GetMesh_Out_FileName());
   }
 
   if ((whilecounter==maxcounter+1) && config_container[ZONE_0]->GetZeroStep()) stepsize = 0.0;
@@ -993,7 +995,7 @@ void COneShotFluidDriver::SurfaceDeformation(CGeometry *geometry, CConfig *confi
 
   } else if (config->GetDesign_Variable(0) != FFD_SETTING) {
 
-    grid_movement->SetVolume_Deformation(geometry, config, false, false);
+    grid_movement->SetVolume_Deformation(geometry, config, true, false);
 
   }
 
@@ -1545,7 +1547,7 @@ void COneShotFluidDriver::UpdateMultiplier(su2double stepsize){
   for(unsigned short iConstr = 0; iConstr < config_container[ZONE_0]->GetnConstr(); iConstr++){
     helper = 0.0;
     for(unsigned short jConstr = 0; jConstr < config_container[ZONE_0]->GetnConstr(); jConstr++){
-       helper+= -BCheck_Inv[iConstr][jConstr]*ConstrFunc_Store[jConstr];
+       helper+= BCheck_Inv[iConstr][jConstr]*ConstrFunc_Store[jConstr];
     }
     multiplier[iConstr] = multiplier[iConstr]+stepsize*helper*config_container[ZONE_0]->GetMultiplierScale(iConstr);
   }

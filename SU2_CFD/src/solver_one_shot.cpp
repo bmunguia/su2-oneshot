@@ -287,27 +287,32 @@ void COneShotSolver::CalculateAlphaBeta(CConfig *config){
   unsigned long iPoint;
   su2double normDelta=0.0,    myNormDelta=0.0;
   su2double normDeltaNew=0.0, myNormDeltaNew=0.0;
+  su2double helper=0.0,       myHelper=0.0;
 
   /* --- Estimate rho and theta values --- */
   for (iPoint = 0; iPoint < nPointDomain; iPoint++){
     for (iVar = 0; iVar < nVar; iVar++){
       myNormDelta += direct_solver->node[iPoint]->GetSolution_Delta(iVar)*direct_solver->node[iPoint]->GetSolution_Delta(iVar);
       myNormDeltaNew += (direct_solver->node[iPoint]->GetSolution(iVar)-direct_solver->node[iPoint]->GetSolution_Store(iVar))*(direct_solver->node[iPoint]->GetSolution(iVar)-direct_solver->node[iPoint]->GetSolution_Store(iVar));
+      myHelper += direct_solver->node[iPoint]->GetSolution_Delta(iVar)*(node[iPoint]->GetSolution(iVar)-node[iPoint]->GetSolution_Store(iVar))-node[iPoint]->GetSolution_Delta(iVar)*(direct_solver->node[iPoint]->GetSolution(iVar)-direct_solver->node[iPoint]->GetSolution_Store(iVar));
     }
   }
 
 #ifdef HAVE_MPI
   SU2_MPI::Allreduce(&myNormDelta, &normDelta, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   SU2_MPI::Allreduce(&myNormDeltaNew, &normDeltaNew, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(&myHelper, &helper, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
   normDelta    = myNormDelta;
   normDeltaNew = myNormDeltaNew;
+  helper       = myHelper;
 #endif
 
-  rho = min(max(sqrt(normDeltaNew)/sqrt(normDelta), 0.9*rho), 0.99); // Saturate contractivity
+  rho = min(max(sqrt(normDeltaNew)/sqrt(normDelta), 0.9*rho), 0.9999); // Saturate contractivity
+  theta = max(fabs(helper)/normDelta, 0.9*theta);
 
-  su2double alpha = 2./((1.-rho)*(1.-rho));
-  su2double beta  = 2.;
+  su2double alpha = 2.*theta/((1.-rho)*(1.-rho));
+  su2double beta  = 2./theta;
 
   config->SetOneShotAlpha(alpha);
   config->SetOneShotBeta(beta);
