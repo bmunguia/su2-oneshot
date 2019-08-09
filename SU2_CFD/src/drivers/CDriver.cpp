@@ -3091,6 +3091,8 @@ void CDriver::Iteration_Preprocessing(CConfig* config, CIteration *&iteration) {
         cout << ": one-shot fluid iteration." << endl;
       iteration_container[iZone][iInst] = new COneShotFluidIteration(config_container[iZone]);
       break;
+
+  }
 }
 
 void CDriver::DynamicMesh_Preprocessing(CConfig *config, CGeometry **geometry, CSolver ***solver, CIteration* iteration,

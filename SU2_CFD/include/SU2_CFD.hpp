@@ -46,6 +46,7 @@
 #include "drivers/CSinglezoneDriver.hpp"
 #include "drivers/CMultizoneDriver.hpp"
 #include "drivers/CDiscAdjSinglezoneDriver.hpp"
+#include "drivers/COneShotDriver.hpp"
 #include "solver_structure.hpp"
 #include "integration_structure.hpp"
 #include "output_structure.hpp"

@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
     }
     if (config->GetDiscrete_Adjoint() && !oneshot)
        driver = new CDiscAdjSinglezoneDriver(config_file_name, nZone, MPICommunicator);
-    else if(config->GetDiscrete_Adjoint() && oneshot)
+    else if (config->GetDiscrete_Adjoint() && oneshot)
        driver = new COneShotFluidDriver(config_file_name, nZone, MPICommunicator);
     else
        driver = new CSinglezoneDriver(config_file_name, nZone, MPICommunicator);
