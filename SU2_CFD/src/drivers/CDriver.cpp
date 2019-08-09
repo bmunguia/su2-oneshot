@@ -1005,7 +1005,8 @@ void CDriver::Solver_Preprocessing(CConfig* config, CGeometry** geometry, CSolve
       spalart_allmaras, neg_spalart_allmaras, menter_sst, transition,
       template_solver, disc_adj, disc_adj_turb, disc_adj_heat,
       fem_dg_flow, fem_dg_shock_persson,
-      e_spalart_allmaras, comp_spalart_allmaras, e_comp_spalart_allmaras;
+      e_spalart_allmaras, comp_spalart_allmaras, e_comp_spalart_allmaras,
+      one_shot;
   
   /*--- Count the number of DOFs per solution point. ---*/
   
@@ -1025,6 +1026,7 @@ void CDriver::Solver_Preprocessing(CConfig* config, CGeometry** geometry, CSolve
   template_solver  = false;
   fem_dg_flow      = false;  fem_dg_shock_persson = false;
   e_spalart_allmaras = false; comp_spalart_allmaras = false; e_comp_spalart_allmaras = false;
+  one_shot         = false;
   
   bool compressible   = (config->GetKind_Regime() == COMPRESSIBLE);
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
@@ -1053,9 +1055,9 @@ void CDriver::Solver_Preprocessing(CConfig* config, CGeometry** geometry, CSolve
     case DISC_ADJ_FEM_RANS: fem_ns = true; fem_turbulent = true; disc_adj = true; if(config->GetKind_Trans_Model() == LM) fem_transition = true; break;
     case DISC_ADJ_FEM: fem = true; disc_adj_fem = true; break;
     case DISC_ADJ_HEAT: heat_fvm = true; disc_adj_heat = true; break;
-    case ONE_SHOT_EULER: euler = true; disc_adj = true; break;
-    case ONE_SHOT_NAVIER_STOKES: ns = true; disc_adj = true; heat_fvm = config->GetWeakly_Coupled_Heat(); break;
-    case ONE_SHOT_RANS: ns = true; turbulent = true; disc_adj = true; disc_adj_turb = (!config->GetFrozen_Visc_Disc()); heat_fvm = config->GetWeakly_Coupled_Heat(); break;
+    case ONE_SHOT_EULER: euler = true; disc_adj = true; one_shot = true; break;
+    case ONE_SHOT_NAVIER_STOKES: ns = true; disc_adj = true; one_shot = true; heat_fvm = config->GetWeakly_Coupled_Heat(); break;
+    case ONE_SHOT_RANS: ns = true; turbulent = true; disc_adj = true; one_shot = true;disc_adj_turb = (!config->GetFrozen_Visc_Disc()); heat_fvm = config->GetWeakly_Coupled_Heat(); break;
   }
   
   /*--- Determine the kind of FEM solver used for the flow. ---*/
@@ -1190,15 +1192,25 @@ void CDriver::Solver_Preprocessing(CConfig* config, CGeometry** geometry, CSolve
     }
      
     if (disc_adj) {
-      solver[iMGlevel][ADJFLOW_SOL] = new CDiscAdjSolver(geometry[iMGlevel], config, solver[iMGlevel][FLOW_SOL], RUNTIME_FLOW_SYS, iMGlevel);
-      if (iMGlevel == MESH_0) DOFsPerPoint += solver[iMGlevel][ADJFLOW_SOL]->GetnVar();
-      if (disc_adj_turb) {
-        solver[iMGlevel][ADJTURB_SOL] = new CDiscAdjSolver(geometry[iMGlevel], config, solver[iMGlevel][TURB_SOL], RUNTIME_TURB_SYS, iMGlevel);
-        if (iMGlevel == MESH_0) DOFsPerPoint += solver[iMGlevel][ADJTURB_SOL]->GetnVar();
+      if (one_shot) {
+        solver[iMGlevel][ADJFLOW_SOL] = new COneShotSolver(geometry[iMGlevel], config, solver[iMGlevel][FLOW_SOL], RUNTIME_FLOW_SYS, iMGlevel);
+        if (iMGlevel == MESH_0) DOFsPerPoint += solver[iMGlevel][ADJFLOW_SOL]->GetnVar();
+        if (disc_adj_turb) {
+          solver[iMGlevel][ADJTURB_SOL] = new COneShotSolver(geometry[iMGlevel], config, solver[iMGlevel][TURB_SOL], RUNTIME_TURB_SYS, iMGlevel);
+          if (iMGlevel == MESH_0) DOFsPerPoint += solver[iMGlevel][ADJTURB_SOL]->GetnVar();
+        }
       }
-      if (heat_fvm) {
-        solver[iMGlevel][ADJHEAT_SOL] = new CDiscAdjSolver(geometry[iMGlevel], config, solver[iMGlevel][HEAT_SOL], RUNTIME_HEAT_SYS, iMGlevel);
-        if (iMGlevel == MESH_0) DOFsPerPoint += solver[iMGlevel][ADJHEAT_SOL]->GetnVar();
+      else {
+        solver[iMGlevel][ADJFLOW_SOL] = new CDiscAdjSolver(geometry[iMGlevel], config, solver[iMGlevel][FLOW_SOL], RUNTIME_FLOW_SYS, iMGlevel);
+        if (iMGlevel == MESH_0) DOFsPerPoint += solver[iMGlevel][ADJFLOW_SOL]->GetnVar();
+        if (disc_adj_turb) {
+          solver[iMGlevel][ADJTURB_SOL] = new CDiscAdjSolver(geometry[iMGlevel], config, solver[iMGlevel][TURB_SOL], RUNTIME_TURB_SYS, iMGlevel);
+          if (iMGlevel == MESH_0) DOFsPerPoint += solver[iMGlevel][ADJTURB_SOL]->GetnVar();
+        }
+        if (heat_fvm) {
+          solver[iMGlevel][ADJHEAT_SOL] = new CDiscAdjSolver(geometry[iMGlevel], config, solver[iMGlevel][HEAT_SOL], RUNTIME_HEAT_SYS, iMGlevel);
+          if (iMGlevel == MESH_0) DOFsPerPoint += solver[iMGlevel][ADJHEAT_SOL]->GetnVar();
+        }
       }
     }
     
@@ -3088,7 +3100,7 @@ void CDriver::Iteration_Preprocessing(CConfig* config, CIteration *&iteration) {
 
     case ONE_SHOT_EULER: case ONE_SHOT_NAVIER_STOKES: case ONE_SHOT_RANS:
       if (rank==MASTER_NODE)
-        cout << ": one-shot fluid iteration." << endl;
+        cout << "One-shot fluid iteration." << endl;
       iteration_container[iZone][iInst] = new COneShotFluidIteration(config_container[iZone]);
       break;
 
@@ -3138,7 +3150,8 @@ void CDriver::DynamicMesh_Preprocessing(CConfig *config, CGeometry **geometry, C
     
     if ( (config->GetKind_Solver() == RANS) ||
          (config->GetKind_Solver() == ADJ_RANS) ||
-         (config->GetKind_Solver() == DISC_ADJ_RANS))
+         (config->GetKind_Solver() == DISC_ADJ_RANS) ||
+         (config->GetKind_Solver() == ONE_SHOT_RANS))
       geometry[MESH_0]->ComputeWall_Distance(config);
   }
   

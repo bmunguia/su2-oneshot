@@ -2,7 +2,7 @@
  * \file COneShotDriver.hpp
  * \brief Headers of the main subroutines for driving one-shot problems.
  *        The subroutines and functions are in the <i>driver_structure.cpp</i> file.
- * \author T. Economon, H. Kline, R. Sanchez
+ * \author B. Munguía
  * \version 6.2.0 "Falcon"
  *
  * The current SU2 release has been coordinated by the

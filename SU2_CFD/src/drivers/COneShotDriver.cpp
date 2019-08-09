@@ -228,7 +228,8 @@ void COneShotFluidDriver::Run(){
   /*--- This needs to be generalized when the new output structure comes ---*/
   output_history = (steady && !((config_container[ZONE_0]->GetnInner_Iter()==1)));
 
-  if (output_history) output->SetConvHistory_Body(NULL, geometry_container, solver_container, config_container, integration_container, false, UsedTime, ZONE_0, INST_0);
+  if (output_history) output->SetConvHistory_Body(NULL, geometry_container, solver_container, 
+                                                  config_container, integration_container, false, UsedTime, ZONE_0, INST_0);
 
 }
 
@@ -284,8 +285,8 @@ void COneShotFluidDriver::RunOneShot(){
 
     whilecounter++;
 
-  } while(TimeIter>config_container[ZONE_0]->GetOneShotStart() && 
-          TimeIter<config_container[ZONE_0]->GetOneShotStop() &&
+  } while(TimeIter > config_container[ZONE_0]->GetOneShotStart() && 
+          TimeIter < config_container[ZONE_0]->GetOneShotStop() &&
           (!CheckFirstWolfe()) && whilecounter<maxcounter+1);
 
   /*--- Store FFD info in file ---*/
@@ -298,7 +299,7 @@ void COneShotFluidDriver::RunOneShot(){
 
   if ((whilecounter==maxcounter+1) && config_container[ZONE_0]->GetZeroStep()) stepsize = 0.0;
 
-  if(TimeIter>config_container[ZONE_0]->GetOneShotStart() && TimeIter<config_container[ZONE_0]->GetOneShotStop()){
+  if(TimeIter > config_container[ZONE_0]->GetOneShotStart() && TimeIter < config_container[ZONE_0]->GetOneShotStop()){
     //Evaluate sensitivity of augmented Lagrangian for an update only in the design
     /*--- N_u ---*/
     for (iZone = 0; iZone < nZone; iZone++){
@@ -346,7 +347,7 @@ void COneShotFluidDriver::RunOneShot(){
 
   CalculateLagrangian(true);
 
-  if(TimeIter>=config_container[ZONE_0]->GetOneShotStart() && TimeIter<config_container[ZONE_0]->GetOneShotStop()){
+  if(TimeIter >= config_container[ZONE_0]->GetOneShotStart() && TimeIter < config_container[ZONE_0]->GetOneShotStop()){
 
     /*--- Update design variable ---*/
     UpdateDesignVariable();
@@ -397,7 +398,7 @@ void COneShotFluidDriver::RunOneShot(){
     ComputeActiveSet(stepsize);
 
     /*--- Do a BFGS update to approximate the inverse preconditioner ---*/
-    if(TimeIter>config_container[ZONE_0]->GetOneShotStart() && !config_container[ZONE_0]->GetLimitedMemory()) BFGSUpdate(config_container[ZONE_0]);
+    if(TimeIter > config_container[ZONE_0]->GetOneShotStart() && !config_container[ZONE_0]->GetLimitedMemory()) BFGSUpdate(config_container[ZONE_0]);
     if(config_container[ZONE_0]->GetLimitedMemory()) LBFGSUpdate(config_container[ZONE_0]);
 
     SetAugmentedLagrangianGradient();
