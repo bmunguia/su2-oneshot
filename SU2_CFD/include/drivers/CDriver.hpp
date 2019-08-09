@@ -38,17 +38,17 @@
 
 #pragma once
 
-#include "../../Common/include/mpi_structure.hpp"
-#include "iteration_structure.hpp"
-#include "solver_structure.hpp"
-#include "integration_structure.hpp"
-#include "output_structure.hpp"
-#include "numerics_structure.hpp"
-#include "transfer_structure.hpp"
-#include "../../Common/include/geometry_structure.hpp"
-#include "../../Common/include/grid_movement_structure.hpp"
-#include "../../Common/include/config_structure.hpp"
-#include "../../Common/include/interpolation_structure.hpp"
+#include "../../../Common/include/mpi_structure.hpp"
+#include "../iteration_structure.hpp"
+#include "../solver_structure.hpp"
+#include "../integration_structure.hpp"
+#include "../output_structure.hpp"
+#include "../numerics_structure.hpp"
+#include "../transfer_structure.hpp"
+#include "../../../Common/include/geometry_structure.hpp"
+#include "../../../Common/include/grid_movement_structure.hpp"
+#include "../../../Common/include/config_structure.hpp"
+#include "../../../Common/include/interpolation_structure.hpp"
 
 using namespace std;
 
@@ -130,20 +130,32 @@ public:
    */  
   virtual void Run() { };
 
+protected:
+  
+  /*!
+   * \brief Init_Containers
+   */
+  void SetContainers_Null();
+  
   /*!
    * \brief Read in the config and mesh files.
    */
-  void Input_Preprocessing(SU2_Comm MPICommunicator);
+  void Input_Preprocessing(CConfig **&config, CConfig *&driver_config);
 
   /*!
    * \brief Construction of the edge-based data structure and the multigrid structure.
    */
-  void Geometrical_Preprocessing();
+  void Geometrical_Preprocessing(CConfig *config, CGeometry **&geometry);
   
   /*!
    * \brief Do the geometrical preprocessing for the DG FEM solver.
    */
-  void Geometrical_Preprocessing_DGFEM();
+  void Geometrical_Preprocessing_DGFEM(CConfig *config, CGeometry **&geometry);
+
+  /*!
+   * \brief Geometrical_Preprocessing_FVM
+   */
+  void Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geometry);
   
   /*!
    * \brief Definition of the physics iteration class or within a single zone.
@@ -151,7 +163,7 @@ public:
    * \param[in] config - Definition of the particular problem.
    * \param[in] iZone - Index of the zone.
    */
-  void Iteration_Preprocessing();
+  void Iteration_Preprocessing(CConfig *config, CIteration *&iteration);
 
   /*!
    * \brief Definition and allocation of all solution classes.
@@ -159,7 +171,7 @@ public:
    * \param[in] geometry - Geometrical definition of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  void Solver_Preprocessing(CSolver ****solver_container, CGeometry ***geometry, CConfig *config, unsigned short val_iInst);
+  void Solver_Preprocessing(CConfig *config, CGeometry **geometry, CSolver ***&solver);
 
   /*!
    * \brief Restart of the solvers from the restart files.
@@ -167,7 +179,7 @@ public:
    * \param[in] geometry - Geometrical definition of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  void Solver_Restart(CSolver ****solver_container, CGeometry ***geometry, CConfig *config, bool update_geo, unsigned short val_iInst);
+  void Solver_Restart(CSolver ***solver, CGeometry **geometry, CConfig *config, bool update_geo);
 
   /*!
    * \brief Definition and allocation of all solution classes.
@@ -175,7 +187,7 @@ public:
    * \param[in] geometry - Geometrical definition of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  void Solver_Postprocessing(CSolver ****solver_container, CGeometry **geometry, CConfig *config, unsigned short val_iInst);
+  void Solver_Postprocessing(CSolver ****solver, CGeometry **geometry, CConfig *config, unsigned short val_iInst);
 
   /*!
    * \brief Definition and allocation of all integration classes.
@@ -183,7 +195,7 @@ public:
    * \param[in] geometry - Geometrical definition of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  void Integration_Preprocessing(CIntegration ***integration_container, CGeometry ***geometry, CConfig *config, unsigned short val_iInst);
+  void Integration_Preprocessing(CConfig *config, CIntegration **&integration);
 
   /*!
    * \brief Definition and allocation of all integration classes.
@@ -191,12 +203,12 @@ public:
    * \param[in] geometry - Geometrical definition of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  void Integration_Postprocessing(CIntegration ***integration_container, CGeometry **geometry, CConfig *config, unsigned short val_iInst);
+  void Integration_Postprocessing(CIntegration ***integration, CGeometry **geometry, CConfig *config, unsigned short val_iInst);
 
   /*!
    * \brief Definition and allocation of all interface classes.
    */
-  void Interface_Preprocessing();
+  void Interface_Preprocessing(CConfig **config, CSolver *****solver, CGeometry ****geometry, unsigned short **transfer_types, CTransfer ***&transfer, CInterpolator ***&interpolation);
 
   /*!
    * \brief Definition and allocation of all solver classes.
@@ -205,7 +217,7 @@ public:
    * \param[in] geometry - Geometrical definition of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  void Numerics_Preprocessing(CNumerics *****numerics_container, CSolver ****solver_container, CGeometry ***geometry, CConfig *config, unsigned short val_iInst);
+  void Numerics_Preprocessing(CConfig *config, CSolver ***solver, CNumerics ****&numerics);
 
   /*!
    * \brief Definition and allocation of all solver classes.
@@ -214,27 +226,36 @@ public:
    * \param[in] geometry - Geometrical definition of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  void Numerics_Postprocessing(CNumerics *****numerics_container, CSolver ***solver_container, CGeometry **geometry, CConfig *config, unsigned short val_iInst);
+  void Numerics_Postprocessing(CNumerics *****numerics, CSolver ***solver, CGeometry **geometry, CConfig *config, unsigned short val_iInst);
+
+  /*!
+   * \brief GridMovement_Preprocessing
+   * \param config
+   * \param geometry
+   * \param solver
+   * \param iteration
+   * \param grid_movement
+   * \param surface_movement
+   */
+  void DynamicMesh_Preprocessing(CConfig *config, CGeometry **geometry, CSolver ***solver, CIteration *iteration, CVolumetricMovement *&grid_movement, CSurfaceMovement *&surface_movement);
 
   /*!
    * \brief Initialize Python interface functionalities
    */
-  void PythonInterface_Preprocessing();
-
-  /*!
-   * \brief Deallocation routine
-   */
-  void Postprocessing();
+  void PythonInterface_Preprocessing(CConfig** config, CGeometry**** geometry, CSolver***** solver);
 
   /*!
    * \brief Initiate value for static mesh movement such as the gridVel for the ROTATING frame.
    */
-  void InitStaticMeshMovement();
+  void StaticMesh_Preprocessing(CConfig *config, CGeometry **geometry, CSurfaceMovement *surface_movement);
 
   /*!
    * \brief Initiate value for static mesh movement such as the gridVel for the ROTATING frame.
    */
-  void TurbomachineryPreprocessing(void);
+  void Turbomachinery_Preprocessing(CConfig** config, CGeometry**** geometry, CSolver***** solver, CTransfer*** transfer);
+
+  
+  void Output_Preprocessing(CConfig **config, COutput *&output);
 
   /*!
    * \brief A virtual member.
@@ -279,16 +300,33 @@ public:
    * \param[in] iOuterIter - Fluid-Structure Interaction subiteration.
    */
   virtual void Relaxation_Tractions(unsigned short donorZone, unsigned short targetZone, unsigned long iOuterIter) {};
+  
+  /*!
+   * \brief A virtual member to run a Block Gauss-Seidel iteration in multizone problems.
+   */
+  virtual void Run_GaussSeidel(){};
 
+  /*!
+   * \brief A virtual member to run a Block-Jacobi iteration in multizone problems.
+   */
+  virtual void Run_Jacobi(){};
+  
   /*!
    * \brief A virtual member.
    */
   virtual void Update() {};
+  
+public:
 
   /*!
    * \brief Launch the computation for all zones and all physics.
    */
   virtual void StartSolver();
+  
+  /*!
+   * \brief Deallocation routine
+   */
+  void Postprocessing();  
 
   /*!
    * \brief A virtual member.
@@ -621,7 +659,7 @@ public:
    * \param[in] geometry - Geometrical definition of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  void Inlet_Preprocessing(CSolver ***solver_container, CGeometry **geometry,
+  void Inlet_Preprocessing(CSolver ***solver, CGeometry **geometry,
                                     CConfig *config);
 
   /*!
@@ -668,15 +706,6 @@ public:
    */
   map<string, string> GetAllBoundaryMarkersType();
 
-  /*!
-   * \brief A virtual member to run a Block Gauss-Seidel iteration in multizone problems.
-   */
-  virtual void Run_GaussSeidel(){};
-
-  /*!
-   * \brief A virtual member to run a Block-Jacobi iteration in multizone problems.
-   */
-  virtual void Run_Jacobi(){};
 
 };
 
@@ -1314,527 +1343,5 @@ public:
    */
   void Transfer_Data(unsigned short donorZone, unsigned short targetZone);
 
-};
-
-/*!
- * \class CSinglezoneDriver
- * \brief Class for driving single-zone solvers.
- * \author R. Sanchez
- * \version 6.0.1 "Falcon"
- */
-class CSinglezoneDriver : public CDriver {
-protected:
-
-  unsigned long TimeIter;
-
-public:
-
-  /*!
-   * \brief Constructor of the class.
-   * \param[in] confFile - Configuration file name.
-   * \param[in] val_nZone - Total number of zones.
-   * \param[in] MPICommunicator - MPI communicator for SU2.
-   */
-  CSinglezoneDriver(char* confFile,
-             unsigned short val_nZone,
-             SU2_Comm MPICommunicator);
-
-  /*!
-   * \brief Destructor of the class.
-   */
-  ~CSinglezoneDriver(void);
-
-  /*!
-   * \brief [Overload] Launch the computation for single-zone problems.
-   */
-  void StartSolver();
-
-  /*!
-   * \brief Preprocess the single-zone iteration
-   */
-  virtual void Preprocess(unsigned long TimeIter);
-
-  /*!
-   * \brief Run the iteration for ZONE_0.
-   */
-  virtual void Run();
-
-  /*!
-   * \brief Postprocess the iteration for ZONE_0.
-   */
-  virtual void Postprocess();
-
-  /*!
-   * \brief Update the dual-time solution within multiple zones.
-   */
-  void Update();
-
-  /*!
-   * \brief Output the solution in solution file.
-   */
-  void Output(unsigned long ExtIter);
-
-  /*!
-   * \brief Perform a dynamic mesh deformation, included grid velocity computation and the update of the multigrid structure.
-   */
-  void DynamicMeshUpdate(unsigned long ExtIter);
-
-
-};
-
-/*!
- * \class CDiscAdjSinglezoneDriver
- * \brief Class for driving single-zone adjoint solvers.
- * \author R. Sanchez
- * \version 6.2.0 "Falcon"
- */
-class CDiscAdjSinglezoneDriver : public CSinglezoneDriver {
-protected:
-
-  unsigned long nAdjoint_Iter;                  /*!< \brief The number of adjoint iterations that are run on the fixed-point solver.*/
-  unsigned short RecordingState;                /*!< \brief The kind of recording the tape currently holds.*/
-  unsigned short MainVariables,                 /*!< \brief The kind of recording linked to the main variables of the problem.*/
-                 SecondaryVariables;            /*!< \brief The kind of recording linked to the secondary variables of the problem.*/
-  su2double ObjFunc;                            /*!< \brief The value of the objective function.*/
-  CIteration* direct_iteration;                 /*!< \brief A pointer to the direct iteration.*/
-
-  CConfig *config;                              /*!< \brief Definition of the particular problem. */
-  CIteration *iteration;                        /*!< \brief Container vector with all the iteration methods. */
-  CIntegration **integration;                   /*!< \brief Container vector with all the integration methods. */
-  CGeometry *geometry;                          /*!< \brief Geometrical definition of the problem. */
-  CSolver **solver;                             /*!< \brief Container vector with all the solutions. */
-
-
-public:
-
-  /*!
-   * \brief Constructor of the class.
-   * \param[in] confFile - Configuration file name.
-   * \param[in] val_nZone - Total number of zones.
-   * \param[in] val_nDim - Total number of dimensions.
-   * \param[in] MPICommunicator - MPI communicator for SU2.
-   */
-  CDiscAdjSinglezoneDriver(char* confFile,
-             unsigned short val_nZone,
-             SU2_Comm MPICommunicator);
-
-  /*!
-   * \brief Destructor of the class.
-   */
-  ~CDiscAdjSinglezoneDriver(void);
-
-  /*!
-   * \brief Preprocess the single-zone iteration
-   * \param[in] TimeIter - index of the current time-step.
-   */
-  virtual void Preprocess(unsigned long TimeIter);
-
-  /*!
-   * \brief Run a single iteration of the discrete adjoint solver with a single zone.
-   */
-  void Run(void);
-
-  /*!
-   * \brief Postprocess the adjoint iteration for ZONE_0.
-   */
-  void Postprocess(void);
-
-  /*!
-   * \brief Record one iteration of a flow iteration in within multiple zones.
-   * \param[in] kind_recording - Type of recording (full list in ENUM_RECORDING, option_structure.hpp)
-   */
-  virtual void SetRecording(unsigned short kind_recording);
-
-  /*!
-   * \brief Run one iteration of the solver.
-   * \param[in] kind_recording - Type of recording (full list in ENUM_RECORDING, option_structure.hpp)
-   */
-  virtual void DirectRun(unsigned short kind_recording);
-
-  /*!
-   * \brief Set the objective function.
-   */
-  void SetObjFunction(void);
-
-  /*!
-   * \brief Initialize the adjoint value of the objective function.
-   */
-  void SetAdj_ObjFunction(void);
-
-  /*!
-   * \brief Print out the direct residuals.
-   * \param[in] kind_recording - Type of recording (full list in ENUM_RECORDING, option_structure.hpp)
-   */
-  void Print_DirectResidual(unsigned short kind_recording);
-
-  /*!
-   * \brief Record the main computational path.
-   */
-  void MainRecording(void);
-
-  /*!
-   * \brief Record the secondary computational path.
-   */
-  void SecondaryRecording(void);
-
-};
-
-
-/*!
- * \class CMultizoneDriver
- * \brief Class for driving zone-specific iterations.
- * \author R. Sanchez, O. Burghardt
- * \version 6.0.1 "Falcon"
- */
-class CMultizoneDriver : public CDriver {
-protected:
-
-  bool fsi;
-  bool cht;
-
-  unsigned long TimeIter;
-
-  unsigned short *nVarZone;
-  su2double **init_res,      /*!< \brief Stores the initial residual. */
-            **residual,      /*!< \brief Stores the current residual. */
-            **residual_rel;  /*!< \brief Stores the residual relative to the initial. */
-
-  su2double flow_criteria,
-            flow_criteria_rel,
-            structure_criteria,
-            structure_criteria_rel;
-
-  bool *prefixed_motion;     /*!< \brief Determines if a fixed motion is imposed in the config file. */
-
-public:
-
-  /*!
-   * \brief Constructor of the class.
-   * \param[in] confFile - Configuration file name.
-   * \param[in] val_nZone - Total number of zones.
-   * \param[in] MPICommunicator - MPI communicator for SU2.
-   */
-  CMultizoneDriver(char* confFile,
-             unsigned short val_nZone,
-             SU2_Comm MPICommunicator);
-
-  /*!
-   * \brief Destructor of the class.
-   */
-  ~CMultizoneDriver(void);
-
-  /*!
-   * \brief [Overload] Launch the computation for multizone problems.
-   */
-  void StartSolver();
-
-  /*!
-   * \brief Preprocess the multizone iteration
-   */
-  void Preprocess(unsigned long TimeIter);
-
-  /*!
-   * \brief Use a corrector step to prevent convergence issues.
-   */
-  void Corrector(unsigned short val_iZone);
-
-  /*!
-   * \brief Run a Block Gauss-Seidel iteration in all physical zones.
-   */
-  void Run_GaussSeidel();
-
-  /*!
-   * \brief Run a Block-Jacobi iteration in all physical zones.
-   */
-  void Run_Jacobi();
-
-  /*!
-   * \brief Update the dual-time solution within multiple zones.
-   */
-  void Update();
-
-  /*!
-   * \brief Output the solution in solution file.
-   */
-  void Output(unsigned long TimeIter);
-
-  /*!
-   * \brief Check the convergence at the outer level.
-   */
-  bool OuterConvergence(unsigned long OuterIter);
-
-  /*!
-   * \brief Perform a dynamic mesh deformation, included grid velocity computation and the update of the multigrid structure (multiple zone).
-   */
-  void DynamicMeshUpdate(unsigned long ExtIter);
-
-  /*!
-   * \brief Perform a dynamic mesh deformation, including grid velocity computation and update of the multigrid structure.
-   */
-  void DynamicMeshUpdate(unsigned short val_iZone, unsigned long ExtIter);
-
-  /*!
-   * \brief Routine to provide all the desired physical transfers between the different zones during one iteration.
-   * \return Boolean that determines whether the mesh needs to be updated for this particular transfer
-   */
-  bool Transfer_Data(unsigned short donorZone, unsigned short targetZone);
-
-};
-
-/*!
- * \class COneShotFluidDriver
- * \brief Class that extends the DiscAdjFluidDriver class with methods for one-shot optimization
- * \author L. Kusch
- * \version 6.0.1 "Falcon"
- */
-class COneShotFluidDriver : public CDiscAdjSinglezoneDriver {
-
-protected:
-  unsigned short RecordingState; /*!< \brief The kind of recording the tape currently holds.*/
-
-  unsigned short nDV_Total; /*!< \brief Total number of design variables used in optimization.*/
-
-  su2double* Gradient; /*!< \brief Vector to store gradient obtained from projection .*/
-  su2double* Gradient_Old; /*!< \brief Vector to store gradient obtained from projection (old value) .*/
-  su2double* ShiftedLagrangianGradient; /*!< \brief Saved gradient N_u of the shifted Lagrangian .*/
-  su2double* ShiftedLagrangianGradient_Old; /*!< \brief Saved gradient N_u of the shifted Lagrangian (old value) .*/
-  su2double* DesignVarUpdate; /*!< \brief Update of the design variable Delta u = u_{k+1} - u_k .*/
-  su2double* SearchDirection; /*!< \brief Search direction for optimization.*/
-  su2double** BFGS_Inv; /*!< \brief Inverse matrix for BFGS update.*/
-  su2double* DesignVariable; /*!< \brief Current design variable value.*/
-  su2double* AugmentedLagrangianGradient; /*!< \brief Gradient of doubly augmented Lagrangian.*/
-  su2double* AugmentedLagrangianGradient_Old; /*!< \brief Gradient of doubly augmented Lagrangian (old value).*/
-  su2double Lagrangian, Lagrangian_Old; /*!< \brief Value of doubly augmented Lagrangian.*/
-  
-  su2double lb, ub; /*!< \brief Lower and upper bounds of design variables.*/
-  su2double epsilon; /*!< \brief Estimator for the active set.*/
-  su2double cwolfeone; /*!< \brief First Wolfe line search parameter.*/
-  bool* activeset; /*!< \brief Flag for indices belonging to the active set (lower and upper design bounds are reached).*/
-
-  su2double* ConstrFunc; /*!< \brief Constraint function values.*/
-  su2double* multiplier; /*!< \brief Lagrange multipliers for constraint functions.*/
-  su2double* ConstrFunc_Store; /*!< \brief Old Constraint function (stored when overwritten).*/
-  su2double** BCheck_Inv; /*!< \brief Inverse matrix for multiplier update.*/
-
-  //Limited memory BFGS
-  unsigned short nBFGSmax; /*!< \brief Maximum number of stored values for BFGS update.*/
-  unsigned short nBFGS; /*!< \brief Counter for limited memory BFGS update.*/
-  su2double** ykvec; /*!< \brief Vector yk stored for limited memory BFGS.*/
-  su2double** skvec; /*!< \brief Vector sk stored for limited memory BFGS.*/
-
-  su2double BFGS_Init;
-
-  bool update; /*!< \brief Flag for whether the geometry has been updated (and whether to update the dual grid).*/
-
-public:
-
-  /*!
-    * \brief Constructor of the class.
-    * \param[in] confFile - Configuration file name.
-    * \param[in] val_nZone - Total number of zones.
-    */
-  COneShotFluidDriver(char* confFile,
-                   unsigned short val_nZone,
-                   SU2_Comm MPICommunicator);
-
-  /*!
-   * \brief Destructor of the class.
-   */
-  ~COneShotFluidDriver(void);
-
-  /*!
-   * \brief Preprocess the one-shot iteration
-   * \param[in] TimeIter - index of the current time-step.
-   */
-  void Preprocess(unsigned long TimeIter);
-
-  /*!
-   * \brief Runs main routines of the one-shot class.
-   */
-  void Run();
-
-  /*!
-   * \brief Runs a normal BFGS optimization with a simple line search.
-   */
-  void RunBFGS();
-
-  /*!
-   * \brief Runs a computation of the discrete adjoint using the piggy-back approach.
-   */
-  void RunPiggyBack();
-
-  /*!
-   * \brief Runs an optimization using the one-shot method.
-   */
-  void RunOneShot();
-
-  /*!
-   * \brief Executes one primal and dual iteration (in a piggy-back manner).
-   */
-  void PrimalDualStep();
-
-  /*!
-   * \brief Executes all operations needed to find the "alpha"-term of the doubly augmented Lagrangian.
-   */
-  void ComputeAlphaTerm();
-
-  /*!
-   * \brief Executes all operations needed to find the "beta"-term of the doubly augmented Lagrangian.
-   */
-  void ComputeBetaTerm();
-
-  /*!
-   * \brief Record one iteration of a flow iteration in within multiple zones.
-   * \param[in] kind_recording - Type of recording (either CONS_VARS, MESH_COORDS, COMBINED or NONE)
-   */
-  void SetRecording(unsigned short kind_recording);
-
-  /*!
-   * \brief Projection of the surface sensitivity using algorithmic differentiation (AD) (see also SU2_DOT).
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] surface_movement - Surface movement class of the problem.
-   * \param[in] Gradient - Output to store the gradient data.
-   */
-  void SetProjection_AD(CGeometry *geometry, CConfig *config, CSurfaceMovement *surface_movement, su2double* Gradient);
-  void SetProjection_FD(CGeometry *geometry, CConfig *config, CSurfaceMovement *surface_movement, su2double* Gradient);
-
-  /*!
-   * \brief Performs a surface deformation and volumetric deformation (see also SU2_DEF).
-   * \param[in] geometry - geometry class.
-   * \param[in] config - config class.
-   * \param[in] surface_movement - surface movement class
-   * \param[in] grid_movement - volumetric movement class
-   */
-  void SurfaceDeformation(CGeometry *geometry, CConfig *config, CSurfaceMovement *surface_movement, CVolumetricMovement *grid_movement);
-
-  /*!
-   * \brief Update the inverse of the BFGS approximation.
-   * \param[in] config - config class.
-   */
-  void BFGSUpdate(CConfig *config);
-
-  /*!
-   * \brief Update the inverse of the Limited memory BFGS approximation.
-   * \param[in] config - config class.
-   */
-  void LBFGSUpdate(CConfig *config);
-
-  /*!
-   * \brief Recursive application for Limited memory BFGS approximation.
-   * \param[in] config - config class.
-   */
-  void LBFGSUpdateRecursive(CConfig *config, unsigned short nCounter);
-
-  /*!
-   * \brief Compute the search direction using the approximated inverse, the gradient N_u and an active set projection.
-   */
-  void ComputeSearchDirection();
-  void ComputeNegativeSearchDirection(); //TODO
-
-  /*!
-   * \brief Compute the updated design variable with the search direction and the given step size.
-   * \param[in] stepsize - factor for the line search.
-   */  
-  void ComputeDesignVarUpdate(su2double stepsize);
-
-  /*!
-   * \brief Check if the search direction is a descent direction.
-   */
-  bool CheckDescent();
-
-  /*!
-   * \brief Check if the first Wolfe descent condition is fulfilled (line search condition).
-   */
-  bool CheckFirstWolfe();
-
-  /*!
-   * \brief Store values for the updated design variables.
-   */
-  void UpdateDesignVariable();
-
-  /*!
-   * \brief Store the values for the Lagrangian and its gradient.
-   */
-  void StoreLagrangianInformation();
-
-  /*!
-   * \brief Calculate value for normal or doubly augmented Lagrangian.
-   * \param[in] augmented - YES if the doubly augmented Lagrangian shall be calculated
-   */
-  void CalculateLagrangian(bool augmented);
-
-  /*!
-   * \brief Store the gradient of the shifted Lagrangian.
-   */
-  void SetShiftedLagrangianGradient();
-
-  /*!
-   * \brief Store the gradient of the augmented Lagrangian.
-   */
-  void SetAugmentedLagrangianGradient();
-
-  /*!
-   * \brief Initialize the adjoint value of the objective function with 0.0.
-   */
-  void SetAdj_ObjFunction_Zero();
-
-  /*!
-   * \brief Find the indices for the epsilon-active set (overestimated).
-   */
-  void ComputeActiveSet(su2double stepsize);
-
-  /*!
-   * \brief Project mesh sensitivities to surface and design variables using AD.
-   */
-  void ProjectMeshSensitivities();
-
-  /*!
-   * \brief Project input value into feasible bounds of design space.
-   * \param[in] value - value that is projected
-   * \return projected value
-   */
-  su2double BoundProjection(su2double value);
-
-  /*!
-   * \brief Project a given vector value into the epsilon-active set (or inactive set).
-   * \param[in] iDV - index of the respective value
-   * \param[in] value - corresponding value
-   * \param[in] active - is true if the projection is into the active set
-   * \return projected value
-   */
-  su2double ProjectionSet(unsigned short iDV, su2double value, bool active);
-
-  /*!
-   * \brief Project a given matrix value into the epsilon-active set (or inactive set).
-   * \param[in] iDV - row index of the respective value
-   * \param[in] jDV - column index of the respective value
-   * \param[in] value - corresponding value
-   * \param[in] active - is true if the projection is into the active set
-   * \return projected value
-   */
-  su2double ProjectionPAP(unsigned short iDV, unsigned short jDV, su2double value, bool active);
-
-  /*!
-   * \brief Update the constraint multiplier.
-   */
-  void UpdateMultiplier(su2double stepsize);
-
-  /*!
-   * \brief Set the constraint functions.
-   */
-  void SetConstrFunction();
-
-  /*!
-   * \brief Initialize the adjoint value of the constraint functions.
-   */
-  void SetAdj_ConstrFunction(su2double *seeding);
-
-  /*!
-   * \brief Store the constraints.
-   */
-  void StoreConstrFunction();
-
-  void ComputePreconditioner();
 };
 
