@@ -73,6 +73,7 @@ protected:
   su2double* multiplier; /*!< \brief Lagrange multipliers for constraint functions.*/
   su2double* ConstrFunc_Store; /*!< \brief Old Constraint function (stored when overwritten).*/
   su2double** BCheck_Inv; /*!< \brief Inverse matrix for multiplier update.*/
+  su2double  BCheck_Norm; /*!< \brief Norm of the matrix for multiplier update.*/
 
   //Limited memory BFGS
   unsigned short nBFGSmax; /*!< \brief Maximum number of stored values for BFGS update.*/

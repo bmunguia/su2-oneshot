@@ -4426,7 +4426,7 @@ public:
   /*!
    * \brief A virtual member.
    */
-  virtual void CalculateAlphaBeta(CConfig *config);
+  virtual void CalculateAlphaBeta(CConfig *config, su2double val_bcheck_norm);
 
   /*!
    * \brief A virtual member.
@@ -15802,7 +15802,7 @@ public:
   /*!
    * \brief Calculate estimates for alpha and beta of the doubly augmented Lagrangian
    */
-  void CalculateAlphaBeta(CConfig *config);
+  void CalculateAlphaBeta(CConfig *config, su2double val_bcheck_norm);
 
   /*!
    * \brief Sets the adjoint values of the input variables of the flow (+turb.) iteration

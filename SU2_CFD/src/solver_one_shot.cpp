@@ -282,7 +282,7 @@ void COneShotSolver::LoadSaveSolution(){
   }
 }
 
-void COneShotSolver::CalculateAlphaBeta(CConfig *config){
+void COneShotSolver::CalculateAlphaBeta(CConfig *config, su2double val_bcheck_norm){
   unsigned short iVar;
   unsigned long iPoint;
   su2double normDelta=0.0,    myNormDelta=0.0;
@@ -311,8 +311,10 @@ void COneShotSolver::CalculateAlphaBeta(CConfig *config){
   rho = min(max(sqrt(normDeltaNew)/sqrt(normDelta), 0.9*rho), 0.9999); // Saturate contractivity
   theta = max(fabs(helper)/normDelta, 0.9*theta);
 
-  su2double alpha = 2.*theta/((1.-rho)*(1.-rho));
   su2double beta  = 2./theta;
+  su2double alpha = 2.*theta/((1.-rho)*(1.-rho));
+
+  if(config->GetnConstr() > 0) alpha = max(alpha, 1./(beta*val_bcheck_norm));
 
   config->SetOneShotAlpha(alpha);
   config->SetOneShotBeta(beta);

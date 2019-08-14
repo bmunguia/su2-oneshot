@@ -104,8 +104,9 @@ COneShotFluidDriver::COneShotFluidDriver(char* confFile,
     for (unsigned short jConstr = 0; jConstr  < config_container[ZONE_0]->GetnConstr(); jConstr++){
       BCheck_Inv[iConstr][jConstr] = 0.0;
     }
-    BCheck_Inv[iConstr][iConstr] = config_container[ZONE_0]->GetMultiplierFactor(iConstr);
+    BCheck_Inv[iConstr][iConstr] = 1./config_container[ZONE_0]->GetBCheckEpsilon();
   }
+  BCheck_Norm = sqrt(config_container[ZONE_0]->GetnConstr()*config_container[ZONE_0]->GetBCheckEpsilon()*config_container[ZONE_0]->GetBCheckEpsilon());
 
   for (unsigned short iBFGS = 0; iBFGS < nBFGSmax; iBFGS++){
     ykvec[iBFGS] = new su2double[nDV_Total];
@@ -342,7 +343,7 @@ void COneShotFluidDriver::RunOneShot(){
 
   /*--- Estimate Alpha and Beta ---*/
   if(TimeIter > config_container[ZONE_0]->GetOneShotStart() && TimeIter > 2) {
-    solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->CalculateAlphaBeta(config_container[ZONE_0]);
+    solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->CalculateAlphaBeta(config_container[ZONE_0], BCheck_Norm);
   }
 
   CalculateLagrangian(true);
@@ -1402,15 +1403,24 @@ void COneShotFluidDriver::ComputePreconditioner(){
 
   su2double bcheck=0;
   for (iConstr = 0; iConstr  < nConstr; iConstr++){
-    BCheck[iConstr][iConstr]=config_container[ZONE_0]->GetBCheckEpsilon();
+    BCheck[iConstr][iConstr] = config_container[ZONE_0]->GetBCheckEpsilon();
     for (jConstr = 0; jConstr  < nConstr; jConstr++){
       for (iZone = 0; iZone < nZone; iZone++) {
-        BCheck[iConstr][jConstr]+=config_container[ZONE_0]->GetOneShotBeta()*solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->MultiplyConstrDerivative(iConstr,jConstr);
+        BCheck[iConstr][jConstr] += config_container[ZONE_0]->GetOneShotBeta()*solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->MultiplyConstrDerivative(iConstr,jConstr);
       }
     }
   }
   if (nConstr==1){
-    BCheck_Inv[0][0]=1./BCheck[0][0];
+    if(BCheck[0][0] > 0.) {
+      BCheck_Norm = BCheck[0][0];
+      BCheck_Inv[0][0] = 1./BCheck[0][0];
+    }
+    else{
+      if (rank == MASTER_NODE) cout << "BCheck not positive definite!!!" << endl;
+      BCheck_Norm = config_container[ZONE_0]->GetBCheckEpsilon();
+      BCheck_Inv[0][0] = 1./config_container[ZONE_0]->GetBCheckEpsilon();
+    }
+
   } else {
     bcheck=1./(BCheck[0][0]*BCheck[1][1]*BCheck[2][2]+BCheck[1][0]*BCheck[2][1]*BCheck[0][2]+BCheck[2][0]*BCheck[0][1]*BCheck[1][2]-BCheck[0][0]*BCheck[2][1]*BCheck[1][2]-BCheck[2][0]*BCheck[1][1]*BCheck[0][2]-BCheck[1][0]*BCheck[0][1]*BCheck[2][2]);
     BCheck_Inv[0][0]=bcheck*(BCheck[1][1]*BCheck[2][2]-BCheck[1][2]*BCheck[2][1]);
