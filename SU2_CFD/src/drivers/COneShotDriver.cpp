@@ -1347,6 +1347,55 @@ void COneShotFluidDriver::ComputeAlphaTerm(){
     AD::Reset();
 }
 
+void COneShotFluidDriver::ComputeBetaTerm(){
+    unsigned short iZone = 0;
+    unsigned short iInst = 0;
+
+    /*--- Note: Not applicable for unsteady code ---*/
+
+    /*--- For the one shot iteration we have to record for every steady state iteration. ---*/
+
+    /*--- Store the computational graph of one direct iteration with the conservative variables and the mesh coordinates as input. ---*/
+
+    SetRecording(COMBINED);
+
+      /*--- Initialize the adjoint of the output variables of the iteration with the adjoint solution
+     *    of the previous iteration. The values are passed to the AD tool. ---*/
+
+    for (iZone = 0; iZone < nZone; iZone++) {
+
+      config_container[iZone]->SetIntIter(0);
+      iteration_container[iZone][INST_0]->InitializeAdjoint(solver_container, geometry_container, config_container, iZone, iInst);
+
+    }
+    /*--- Initialize the adjoint of the objective function with 1.0. ---*/
+
+    SetAdj_ObjFunction();
+    SetAdj_ConstrFunction(multiplier);
+
+    /*--- Interpret the stored information by calling the corresponding routine of the AD tool. ---*/
+
+    AD::ComputeAdjoint();
+
+    /*--- Extract the computed adjoint values of the input variables and store them for the next iteration. ---*/
+    for (iZone = 0; iZone < nZone; iZone++) {
+      iteration_container[iZone][INST_0]->Iterate_No_Residual(output, integration_container, geometry_container,
+                                            solver_container, numerics_container, config_container,
+                                            surface_movement, grid_movement, FFDBox, iZone, iInst);
+    }
+
+    /*--- Extract the computed sensitivity values. ---*/
+    for (iZone = 0; iZone < nZone; iZone++) {
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SetSensitivity(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]);
+    }
+
+    /*--- Clear the stored adjoint information to be ready for a new evaluation. ---*/
+
+    AD::ClearAdjoints();
+
+    AD::Reset();
+}
+
 void COneShotFluidDriver::ComputePreconditioner(){
 
   unsigned short iInst = 0;
@@ -1439,55 +1488,6 @@ void COneShotFluidDriver::ComputePreconditioner(){
   }
   delete [] BCheck;
   delete [] seeding;
-}
-
-void COneShotFluidDriver::ComputeBetaTerm(){
-    unsigned short iZone = 0;
-    unsigned short iInst = 0;
-
-    /*--- Note: Not applicable for unsteady code ---*/
-
-    /*--- For the one shot iteration we have to record for every steady state iteration. ---*/
-
-    /*--- Store the computational graph of one direct iteration with the conservative variables and the mesh coordinates as input. ---*/
-
-    SetRecording(COMBINED);
-
-      /*--- Initialize the adjoint of the output variables of the iteration with the adjoint solution
-     *    of the previous iteration. The values are passed to the AD tool. ---*/
-
-    for (iZone = 0; iZone < nZone; iZone++) {
-
-      config_container[iZone]->SetIntIter(0);
-      iteration_container[iZone][INST_0]->InitializeAdjoint(solver_container, geometry_container, config_container, iZone, iInst);
-
-    }
-    /*--- Initialize the adjoint of the objective function with 1.0. ---*/
-
-    SetAdj_ObjFunction();
-    SetAdj_ConstrFunction(multiplier);
-
-    /*--- Interpret the stored information by calling the corresponding routine of the AD tool. ---*/
-
-    AD::ComputeAdjoint();
-
-    /*--- Extract the computed adjoint values of the input variables and store them for the next iteration. ---*/
-    for (iZone = 0; iZone < nZone; iZone++) {
-      iteration_container[iZone][INST_0]->Iterate_No_Residual(output, integration_container, geometry_container,
-                                            solver_container, numerics_container, config_container,
-                                            surface_movement, grid_movement, FFDBox, iZone, iInst);
-    }
-
-    /*--- Extract the computed sensitivity values. ---*/
-    for (iZone = 0; iZone < nZone; iZone++) {
-      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SetSensitivity(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]);
-    }
-
-    /*--- Clear the stored adjoint information to be ready for a new evaluation. ---*/
-
-    AD::ClearAdjoints();
-
-    AD::Reset();
 }
 
 void COneShotFluidDriver::SetAdj_ObjFunction_Zero(){
