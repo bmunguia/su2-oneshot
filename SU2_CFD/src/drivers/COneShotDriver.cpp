@@ -258,7 +258,6 @@ void COneShotFluidDriver::RunOneShot(){
         /*---Load the old design for line search---*/
         for (iZone = 0; iZone < nZone; iZone++){
           solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadMeshPoints(config_container[iZone], geometry_container[iZone][INST_0][MESH_0]);
-          grid_movement[iZone][INST_0]->UpdateDualGrid(geometry_container[iZone][INST_0][MESH_0], config_container[iZone]);
         }
       }
 
@@ -996,7 +995,7 @@ void COneShotFluidDriver::SurfaceDeformation(CGeometry *geometry, CConfig *confi
 
   } else if (config->GetDesign_Variable(0) != FFD_SETTING) {
 
-    grid_movement->SetVolume_Deformation(geometry, config, true, false);
+    grid_movement->SetVolume_Deformation(geometry, config, false, false);
 
   }
 
