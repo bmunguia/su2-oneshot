@@ -309,7 +309,7 @@ void COneShotSolver::CalculateAlphaBeta(CConfig *config, su2double val_bcheck_no
   su2double beta  = 2.;
   su2double alpha = 2./((1.-rho)*(1.-rho));
 
-  if(nConstr > 0) alpha = max(alpha, 1./(beta*val_bcheck_norm));
+  if(nConstr > 0) beta = max(beta, 1./(val_bcheck_norm));
 
   config->SetOneShotAlpha(alpha);
   config->SetOneShotBeta(beta);

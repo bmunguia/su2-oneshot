@@ -116,16 +116,6 @@ public:
   void Run();
 
   /*!
-   * \brief Runs a normal BFGS optimization with a simple line search.
-   */
-  void RunBFGS();
-
-  /*!
-   * \brief Runs a computation of the discrete adjoint using the piggy-back approach.
-   */
-  void RunPiggyBack();
-
-  /*!
    * \brief Runs an optimization using the one-shot method.
    */
   void RunOneShot();
