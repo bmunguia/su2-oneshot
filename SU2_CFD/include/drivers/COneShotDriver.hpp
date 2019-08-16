@@ -51,6 +51,7 @@ protected:
   unsigned short RecordingState; /*!< \brief The kind of recording the tape currently holds.*/
 
   unsigned short nDV_Total; /*!< \brief Total number of design variables used in optimization.*/
+  unsigned short nConstr; /*!< \brief Total number of constraints used in optimization.*/
 
   su2double* Gradient; /*!< \brief Vector to store gradient obtained from projection .*/
   su2double* Gradient_Old; /*!< \brief Vector to store gradient obtained from projection (old value) .*/
@@ -70,7 +71,9 @@ protected:
   bool* activeset; /*!< \brief Flag for indices belonging to the active set (lower and upper design bounds are reached).*/
 
   su2double* ConstrFunc; /*!< \brief Constraint function values.*/
-  su2double* multiplier; /*!< \brief Lagrange multipliers for constraint functions.*/
+  su2double* Multiplier; /*!< \brief Lagrange multipliers for constraint functions.*/
+  su2double* MultiplierUpdate; /*!< \brief Update of Lagrange multipliers for constraint functions.*/
+  su2double* MultiplierPre; /*!< \brief Lagrange multipliers for constraint functions, scaled by inverse preconditioner.*/
   su2double* ConstrFunc_Store; /*!< \brief Old Constraint function (stored when overwritten).*/
   su2double** BCheck_Inv; /*!< \brief Inverse matrix for multiplier update.*/
   su2double  BCheck_Norm; /*!< \brief Norm of the matrix for multiplier update.*/
@@ -131,6 +134,11 @@ public:
    * \brief Executes one primal and dual iteration (in a piggy-back manner).
    */
   void PrimalDualStep();
+
+  /*!
+   * \brief Executes all operations needed to find the "BCheck"-term of the doubly augmented Lagrangian.
+   */
+  void ComputeBCheckTerm();
 
   /*!
    * \brief Executes all operations needed to find the "alpha"-term of the doubly augmented Lagrangian.
@@ -239,6 +247,11 @@ public:
   void SetAdj_ObjFunction_Zero();
 
   /*!
+   * \brief Initialize the adjoint value of the constraint function with 0.0.
+   */
+  void SetAdj_ConstrFunction_Zero();
+
+  /*!
    * \brief Find the indices for the epsilon-active set (overestimated).
    */
   void ComputeActiveSet(su2double stepsize);
@@ -277,7 +290,7 @@ public:
   /*!
    * \brief Update the constraint multiplier.
    */
-  void UpdateMultiplier(su2double stepsize);
+  void UpdateMultiplier();
 
   /*!
    * \brief Set the constraint functions.
