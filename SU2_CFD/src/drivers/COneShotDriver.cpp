@@ -1246,7 +1246,7 @@ void COneShotFluidDriver::ComputeBCheckTerm(){
     for (iZone = 0; iZone < nZone; iZone++) {
 
       config_container[iZone]->SetIntIter(0);
-      iteration_container[iZone][INST_0]->InitializeAdjoint_Update(solver_container, geometry_container, config_container, iZone, iInst);
+      iteration_container[iZone][INST_0]->InitializeAdjoint_Zero(solver_container, geometry_container, config_container, iZone, iInst);
 
     }
 
