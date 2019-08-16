@@ -105,7 +105,7 @@ COneShotFluidDriver::COneShotFluidDriver(char* confFile,
     ConstrFunc_Store[iConstr] = 0.0;
     Multiplier[iConstr] = 0.0;
     MultiplierUpdate[iConstr] = 0.0;
-    Multiplier_pre[iConstr] = 0.0;
+    MultiplierPre[iConstr] = 0.0;
     BCheck_Inv[iConstr] = new su2double[nConstr];
     for (unsigned short jConstr = 0; jConstr  < nConstr; jConstr++){
       BCheck_Inv[iConstr][jConstr] = 0.0;
@@ -1255,12 +1255,9 @@ void COneShotFluidDriver::CalculateLagrangian(bool augmented){
   }
 
   if(augmented){
-    su2double helper=0.0;
-    for (unsigned short iConstr = 0; iConstr < nConstr; iConstr++)
-    {
-      helper += MultiplierUpdate[iConstr]*MultiplierUpdate[iConstr];
+    for (unsigned short iConstr = 0; iConstr < nConstr; iConstr++){
+      Lagrangian += 0.5*MultiplierUpdate[iConstr]*MultiplierUpdate[iConstr];
     }
-    Lagrangian += helper*(config_container[ZONE_0]->GetOneShotAlpha()/2);
     for (iZone = 0; iZone < nZone; iZone++) {
       Lagrangian+=solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->CalculateLagrangianPart(config_container[iZone], augmented);
     }
@@ -1344,7 +1341,7 @@ void COneShotFluidDriver::ComputeBCheckTerm(){
     /*--- Initialize the adjoint of the objective function with 0.0. ---*/
 
     SetAdj_ObjFunction_Zero();
-    SetAdj_ConstrFunction(Multiplier_pre);
+    SetAdj_ConstrFunction(MultiplierPre);
 
     /*--- Interpret the stored information by calling the corresponding routine of the AD tool. ---*/
 
