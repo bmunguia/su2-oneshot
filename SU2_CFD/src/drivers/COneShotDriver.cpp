@@ -319,7 +319,7 @@ void COneShotFluidDriver::RunOneShot(){
     /*--- Deltamu^T*BCheck^(-T)*BCheck^(-1)*h_u ---*/
     ComputeBCheckTerm();
     for (iZone = 0; iZone < nZone; iZone++){
-      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]->GetOneShotAlpha());
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],1.0);
     }
 
     /*--- Alpha*Deltay^T*G_u ---*/
@@ -381,7 +381,7 @@ void COneShotFluidDriver::RunOneShot(){
     /*--- Deltamu^T*BCheck^(-T)*BCheck^(-1)*h_u ---*/
     ComputeBCheckTerm();
     for (iZone = 0; iZone < nZone; iZone++){
-      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]->GetOneShotAlpha());
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],1.0);
     }
 
     /*--- Alpha*Deltay^T*G_u ---*/
