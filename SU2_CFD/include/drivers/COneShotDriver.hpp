@@ -280,7 +280,7 @@ public:
   /*!
    * \brief Update the constraint multiplier.
    */
-  void UpdateMultiplier();
+  void UpdateMultiplier(su2double stepsize);
 
   /*!
    * \brief Set the constraint functions.

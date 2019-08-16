@@ -319,7 +319,7 @@ void COneShotFluidDriver::RunOneShot(){
     /*--- Deltamu^T*BCheck^(-T)*BCheck^(-1)*h_u ---*/
     ComputeBCheckTerm();
     for (iZone = 0; iZone < nZone; iZone++){
-      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],1.0);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],-1.0);
     }
 
     /*--- Alpha*Deltay^T*G_u ---*/
@@ -352,7 +352,7 @@ void COneShotFluidDriver::RunOneShot(){
     solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadSolution();
   }
 
-  UpdateMultiplier();
+  UpdateMultiplier(stepsize);
   PrimalDualStep();
 
   /*--- Estimate Alpha and Beta ---*/
@@ -381,7 +381,7 @@ void COneShotFluidDriver::RunOneShot(){
     /*--- Deltamu^T*BCheck^(-T)*BCheck^(-1)*h_u ---*/
     ComputeBCheckTerm();
     for (iZone = 0; iZone < nZone; iZone++){
-      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],1.0);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],-1.0);
     }
 
     /*--- Alpha*Deltay^T*G_u ---*/
@@ -1168,7 +1168,7 @@ void COneShotFluidDriver::CalculateLagrangian(bool augmented){
 
   if(augmented){
     for (unsigned short iConstr = 0; iConstr < nConstr; iConstr++){
-      Lagrangian += 0.5*MultiplierUpdate[iConstr]*MultiplierUpdate[iConstr];
+      Lagrangian += 0.5*ConstrFunc[iConstr]*ConstrFunc[iConstr];
     }
     for (iZone = 0; iZone < nZone; iZone++) {
       Lagrangian+=solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->CalculateLagrangianPart(config_container[iZone], augmented);
@@ -1253,7 +1253,7 @@ void COneShotFluidDriver::ComputeBCheckTerm(){
     /*--- Initialize the adjoint of the objective function with 0.0. ---*/
 
     SetAdj_ObjFunction_Zero();
-    SetAdj_ConstrFunction(MultiplierPre);
+    SetAdj_ConstrFunction(ConstrFunc);
 
     /*--- Interpret the stored information by calling the corresponding routine of the AD tool. ---*/
 
@@ -1530,7 +1530,7 @@ void COneShotFluidDriver::SetConstrFunction(){
   }
 }
 
-void COneShotFluidDriver::UpdateMultiplier(){
+void COneShotFluidDriver::UpdateMultiplier(su2double stepsize){
   su2double helper;
   for(unsigned short iConstr = 0; iConstr < nConstr; iConstr++){
     /*--- BCheck^(-1)*h ---*/
@@ -1538,7 +1538,7 @@ void COneShotFluidDriver::UpdateMultiplier(){
     for(unsigned short jConstr = 0; jConstr < nConstr; jConstr++){
        helper+= BCheck_Inv[iConstr][jConstr]*ConstrFunc_Store[jConstr];
     }
-    MultiplierUpdate[iConstr] = helper*config_container[ZONE_0]->GetMultiplierScale(iConstr);
+    MultiplierUpdate[iConstr] = helper*stepsize*config_container[ZONE_0]->GetMultiplierScale(iConstr);
     Multiplier[iConstr] = Multiplier[iConstr] + MultiplierUpdate[iConstr];
 
     /*--- BCheck^(-T)*BCheck^(-1)*h ---*/
