@@ -2079,7 +2079,7 @@ inline su2double CConfig::GetOneShotAlpha(void) { return One_Shot_Alpha; }
 
 inline su2double CConfig::GetOneShotBeta(void) { return One_Shot_Beta; }
 
-inline su2double CConfig::GetOneShotSigma(void) { return One_Shot_Sigma; }
+inline su2double CConfig::GetOneShotGamma(void) { return One_Shot_Gamma; }
 
 inline su2double CConfig::GetFDStep(void) { return One_Shot_FD; }
 
@@ -2095,7 +2095,7 @@ inline void CConfig::SetOneShotAlpha(su2double input) { One_Shot_Alpha = input; 
 
 inline void CConfig::SetOneShotBeta(su2double input) { One_Shot_Beta = input; }
 
-inline void CConfig::SetOneShotSigma(su2double input) { One_Shot_Sigma = input; }
+inline void CConfig::SetOneShotGamma(su2double input) { One_Shot_Gamma = input; }
 
 inline bool CConfig::GetCheckDescent(void) { return OS_Check_Descent; }
 

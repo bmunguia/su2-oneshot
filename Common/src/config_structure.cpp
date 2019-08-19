@@ -2460,8 +2460,8 @@ void CConfig::SetConfig_Options() {
   /*!\brief ONE_SHOT_BETA \n DESCRIPTION: Factor for second additional term in augmented Lagrangian \ingroup Config*/
   addDoubleOption("ONE_SHOT_BETA", One_Shot_Beta, 2.0);
 
-  /*!\brief ONE_SHOT_SIGMA \n DESCRIPTION: Factor for weighting inverse Hessian \ingroup Config*/
-  addDoubleOption("ONE_SHOT_SIGMA", One_Shot_Sigma, 1.0);
+  /*!\brief ONE_SHOT_SIGMA \n DESCRIPTION: Factor for third additional term in augmented Lagrangian \ingroup Config*/
+  addDoubleOption("ONE_SHOT_GAMMA", One_Shot_Gamma, 1.0);
 
   /*!\brief ONE_SHOT_FD \n DESCRIPTION: Finite difference step size for second additional term in augmented Lagrangian \ingroup Config*/
   addDoubleOption("ONE_SHOT_FD", One_Shot_FD, 1E-6);

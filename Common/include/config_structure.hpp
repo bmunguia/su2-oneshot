@@ -1090,7 +1090,7 @@ private:
   bool Quasi_Newton; /*!< \brief option for quasi-Newton method */
   unsigned long One_Shot_Start; /*!< \brief Start iteration for one-shot method */
   unsigned long One_Shot_Stop; /*!< \brief Stop iteration for one-shot method */
-  su2double One_Shot_Alpha, One_Shot_Beta, One_Shot_Sigma; /*!< \brief factors for augmented Lagrangian in one-shot method */ 
+  su2double One_Shot_Alpha, One_Shot_Beta, One_Shot_Gamma; /*!< \brief factors for augmented Lagrangian in one-shot method */ 
   su2double One_Shot_FD; /*!< \brief Finite difference step-size for one-shot method */
   su2double OS_Design_Scale; /*!< \brief Value for scaling the design space */
   su2double Obj_Func_Scale; /*!< \brief Value for scaling the objective function */
@@ -9226,10 +9226,10 @@ public:
   su2double GetOneShotBeta(void);
 
   /*!
-   * \brief Get the multiplier for the inverse Hessian.
-   * \return Value for sigma multiplier in one-shot method
+   * \brief Get the multiplier for the "gamma"-term in the doubly augmented Lagrangian.
+   * \return Value for gamma multiplier in one-shot method
    */
-  su2double GetOneShotSigma(void);
+  su2double GetOneShotGamma(void);
 
   /*!
    * \brief Set the multiplier for the "alpha"-term in the doubly augmented Lagrangian.
@@ -9242,9 +9242,9 @@ public:
   void SetOneShotBeta(su2double input);
 
   /*!
-   * \brief Set the multiplier for the inverse Hessian.
+   * \brief Set the multiplier for the "gamma"-term in the doubly augmented Lagrangian.
    */
-  void SetOneShotSigma(su2double input);
+  void SetOneShotGamma(su2double input);
 
   /*!
    * \brief Get the finite difference step size for the "beta"-term in the doubly augmented Lagrangian.

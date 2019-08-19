@@ -304,15 +304,18 @@ void COneShotSolver::CalculateAlphaBeta(CConfig *config, su2double val_bcheck_no
   normDeltaNew = myNormDeltaNew;
 #endif
 
-  rho = min(max(sqrt(normDeltaNew)/sqrt(normDelta), 0.9*rho), 0.9999); // Saturate contractivity
+  rho = min(max(sqrt(normDeltaNew)/sqrt(normDelta), 0.9*rho), 0.999999); // Saturate contractivity
 
-  su2double beta  = 2.;
   su2double alpha = 2./((1.-rho)*(1.-rho));
+  su2double beta  = 2.;
+  su2double gamma = 2./val_bcheck_norm;
 
-  if(nConstr > 0) beta = max(beta, 1./(val_bcheck_norm));
+  // if(nConstr > 0) beta = max(beta, 1./(val_bcheck_norm));
+  // if(nConstr > 0) beta = max(alpha, 1./(beta*val_bcheck_norm));
 
   config->SetOneShotAlpha(alpha);
   config->SetOneShotBeta(beta);
+  config->SetOneShotGama(gamma);
 
 }
 

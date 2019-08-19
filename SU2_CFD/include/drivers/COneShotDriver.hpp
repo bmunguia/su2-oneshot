@@ -72,9 +72,11 @@ protected:
 
   su2double* ConstrFunc; /*!< \brief Constraint function values.*/
   su2double* Multiplier; /*!< \brief Lagrange multipliers for constraint functions.*/
+  su2double* MultiplierOld; /*!< \brief Lagrange multipliers for constraint functions (old value).*/
   su2double* MultiplierUpdate; /*!< \brief Update of Lagrange multipliers for constraint functions.*/
   su2double* MultiplierPre; /*!< \brief Lagrange multipliers for constraint functions, scaled by inverse preconditioner.*/
   su2double* ConstrFunc_Store; /*!< \brief Old Constraint function (stored when overwritten).*/
+  su2double** BCheck; /*!< \brief Preconditioner matrix for multiplier update.*/
   su2double** BCheck_Inv; /*!< \brief Inverse matrix for multiplier update.*/
   su2double  BCheck_Norm; /*!< \brief Norm of the matrix for multiplier update.*/
 
@@ -128,7 +130,7 @@ public:
   /*!
    * \brief Executes all operations needed to find the "BCheck"-term of the doubly augmented Lagrangian.
    */
-  void ComputeBCheckTerm();
+  void ComputeGammaTerm();
 
   /*!
    * \brief Executes all operations needed to find the "alpha"-term of the doubly augmented Lagrangian.
@@ -276,6 +278,16 @@ public:
    * \return projected value
    */
   su2double ProjectionPAP(unsigned short iDV, unsigned short jDV, su2double value, bool active);
+
+  /*!
+   * \brief Store the old constraint multiplier.
+   */
+  void StoreMultiplier();
+
+  /*!
+   * \brief Load the old constraint multiplier.
+   */
+  void LoadMultiplier();
 
   /*!
    * \brief Update the constraint multiplier.
