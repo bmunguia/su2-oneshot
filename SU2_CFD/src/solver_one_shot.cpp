@@ -315,7 +315,7 @@ void COneShotSolver::CalculateAlphaBeta(CConfig *config, su2double val_bcheck_no
 
   config->SetOneShotAlpha(alpha);
   config->SetOneShotBeta(beta);
-  config->SetOneShotGama(gamma);
+  config->SetOneShotGamma(gamma);
 
 }
 
