@@ -475,7 +475,7 @@ void COneShotFluidDriver::PrimalDualStep(){
 }
 
 void COneShotFluidDriver::SetRecording(unsigned short kind_recording){
-  unsigned short iZone, iMesh;
+  unsigned short iZone;
   unsigned short iInst = 0;
 
 #ifdef HAVE_MPI
@@ -1529,7 +1529,7 @@ void COneShotFluidDriver::SetConstrFunction(){
 }
 
 void COneShotFluidDriver::UpdateMultiplier(){
-  su2double helper, alpha = config_container[ZONE_0]->GetOneShotAlpha();
+  su2double helper;
   for(unsigned short iConstr = 0; iConstr < nConstr; iConstr++){
     /*--- BCheck^(-1)*h ---*/
     helper = 0.0;
