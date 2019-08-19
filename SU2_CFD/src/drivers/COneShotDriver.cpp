@@ -311,9 +311,11 @@ void COneShotFluidDriver::RunOneShot(){
     }
 
     /*--- Gamma*h^T*h_u ---*/
-    ComputeGammaTerm();
-    for (iZone = 0; iZone < nZone; iZone++){
-      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]->GetOneShotGamma());
+    if(nConstr > 0) {
+      ComputeGammaTerm();
+      for (iZone = 0; iZone < nZone; iZone++){
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]->GetOneShotGamma());
+      }
     }
 
     /*--- Alpha*Deltay^T*G_u ---*/
@@ -373,9 +375,11 @@ void COneShotFluidDriver::RunOneShot(){
     if((nConstr > 0) && (!config_container[ZONE_0]->GetConstPrecond())) ComputePreconditioner();
 
     /*--- Gamma*h^T*h_u ---*/
-    ComputeGammaTerm();
-    for (iZone = 0; iZone < nZone; iZone++){
-      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]->GetOneShotGamma());
+    if(nConstr > 0) {
+      ComputeGammaTerm();
+      for (iZone = 0; iZone < nZone; iZone++){
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]->GetOneShotGamma());
+      }
     }
 
     /*--- Alpha*Deltay^T*G_u ---*/
@@ -1162,7 +1166,7 @@ void COneShotFluidDriver::CalculateLagrangian(bool augmented){
 
   if(augmented){
     for (unsigned short iConstr = 0; iConstr < nConstr; iConstr++){
-      Lagrangian += config_container[iZone]->GetOneShotGamma()/2.*ConstrFunc[iConstr]*ConstrFunc[iConstr];
+      Lagrangian += config_container[ZONE_0]->GetOneShotGamma()/2.*ConstrFunc[iConstr]*ConstrFunc[iConstr];
     }
     for (iZone = 0; iZone < nZone; iZone++) {
       Lagrangian += solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->CalculateLagrangianPart(config_container[iZone], augmented);
@@ -1533,6 +1537,7 @@ void COneShotFluidDriver::UpdateMultiplier(){
        helper+= BCheck_Inv[iConstr][jConstr]*ConstrFunc_Store[jConstr];
     }
     Multiplier[iConstr] = Multiplier[iConstr] + helper*config_container[ZONE_0]->GetMultiplierScale(iConstr);
+    if(ConstrFunc_Store[iConstr] * Multiplier[iConstr] < 0.) Multiplier[iConstr] = helper*config_container[ZONE_0]->GetMultiplierScale(iConstr);
   }
 }
 
