@@ -282,7 +282,7 @@ void COneShotSolver::LoadSaveSolution(){
   }
 }
 
-void COneShotSolver::CalculateAlphaBeta(CConfig *config, su2double val_bcheck_norm){
+void COneShotSolver::CalculateAlphaBetaGamma(CConfig *config, su2double val_bcheck_norm){
   unsigned short iVar;
   unsigned long iPoint;
   su2double normDelta=0.0,    myNormDelta=0.0;
@@ -309,9 +309,6 @@ void COneShotSolver::CalculateAlphaBeta(CConfig *config, su2double val_bcheck_no
   su2double alpha = 2./((1.-rho)*(1.-rho));
   su2double beta  = 2.;
   su2double gamma = 2./val_bcheck_norm;
-
-  // if(nConstr > 0) beta = max(beta, 1./(val_bcheck_norm));
-  // if(nConstr > 0) beta = max(alpha, 1./(beta*val_bcheck_norm));
 
   config->SetOneShotAlpha(alpha);
   config->SetOneShotBeta(beta);

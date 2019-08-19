@@ -70,11 +70,7 @@ COneShotFluidDriver::COneShotFluidDriver(char* confFile,
 
   ConstrFunc = new su2double[nConstr];
   Multiplier = new su2double[nConstr];
-  MultiplierOld = new su2double[nConstr];
-  MultiplierUpdate = new su2double[nConstr];
-  MultiplierPre = new su2double[nConstr];
   ConstrFunc_Store = new su2double[nConstr];
-  BCheck     = new su2double*[nConstr];
   BCheck_Inv = new su2double*[nConstr];
 
   nBFGSmax = config_container[ZONE_0]->GetLimitedMemoryIter();
@@ -106,16 +102,10 @@ COneShotFluidDriver::COneShotFluidDriver(char* confFile,
     ConstrFunc[iConstr] = 0.0;
     ConstrFunc_Store[iConstr] = 0.0;
     Multiplier[iConstr] = 0.0;
-    MultiplierOld[iConstr] = 0.0;
-    MultiplierUpdate[iConstr] = 0.0;
-    MultiplierPre[iConstr] = 0.0;
-    BCheck[iConstr]     = new su2double[nConstr];
     BCheck_Inv[iConstr] = new su2double[nConstr];
     for (unsigned short jConstr = 0; jConstr  < nConstr; jConstr++){
-      BCheck[iConstr][jConstr]     = 0.0;
       BCheck_Inv[iConstr][jConstr] = 0.0;
     }
-    BCheck[iConstr][iConstr]     = config_container[ZONE_0]->GetBCheckEpsilon();
     BCheck_Inv[iConstr][iConstr] = 1./config_container[ZONE_0]->GetBCheckEpsilon();
   }
   BCheck_Norm = sqrt(nConstr*config_container[ZONE_0]->GetBCheckEpsilon()*config_container[ZONE_0]->GetBCheckEpsilon());
@@ -170,9 +160,6 @@ COneShotFluidDriver::~COneShotFluidDriver(void){
   if(nConstr > 0){
     delete [] ConstrFunc;
     delete [] Multiplier;
-    delete [] MultiplierOld;
-    delete [] MultiplierUpdate;
-    delete [] MultiplierPre;
     delete [] ConstrFunc_Store;
   }
 
@@ -257,7 +244,6 @@ void COneShotFluidDriver::RunOneShot(){
 
   /*--- Store the old solution and the old design for line search ---*/
   for (iZone = 0; iZone < nZone; iZone++){
-    StoreMultiplier();
     solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreFormerSolution();
     solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreMeshPoints(config_container[iZone], geometry_container[iZone][INST_0][MESH_0]);
   }
@@ -273,7 +259,6 @@ void COneShotFluidDriver::RunOneShot(){
 
         /*---Load the old design for line search---*/
         for (iZone = 0; iZone < nZone; iZone++){
-          LoadMultiplier();
           solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadMeshPoints(config_container[iZone], geometry_container[iZone][INST_0][MESH_0]);
           grid_movement[iZone][INST_0]->UpdateDualGrid(geometry_container[iZone][INST_0][MESH_0], config_container[iZone]);
         }
@@ -296,7 +281,6 @@ void COneShotFluidDriver::RunOneShot(){
       }
 
       /*--- Do a primal and adjoint update ---*/
-      // UpdateMultiplier(stepsize);
       PrimalDualStep();
       CalculateLagrangian(true);
 
@@ -329,7 +313,7 @@ void COneShotFluidDriver::RunOneShot(){
     /*--- Gamma*h^T*h_u ---*/
     ComputeGammaTerm();
     for (iZone = 0; iZone < nZone; iZone++){
-      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],1.0/BCheck_Norm);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]->GetOneShotGamma());
     }
 
     /*--- Alpha*Deltay^T*G_u ---*/
@@ -362,12 +346,12 @@ void COneShotFluidDriver::RunOneShot(){
     solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadSolution();
   }
 
-  UpdateMultiplier(stepsize);
+  UpdateMultiplier();
   PrimalDualStep();
 
   /*--- Estimate Alpha and Beta ---*/
   if(TimeIter > config_container[ZONE_0]->GetOneShotStart() && TimeIter > 2) {
-    solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->CalculateAlphaBeta(config_container[ZONE_0], BCheck_Norm);
+    solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->CalculateAlphaBetaGamma(config_container[ZONE_0], BCheck_Norm);
   }
 
   CalculateLagrangian(true);
@@ -391,7 +375,7 @@ void COneShotFluidDriver::RunOneShot(){
     /*--- Gamma*h^T*h_u ---*/
     ComputeGammaTerm();
     for (iZone = 0; iZone < nZone; iZone++){
-      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],1.0/BCheck_Norm);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]->GetOneShotGamma());
     }
 
     /*--- Alpha*Deltay^T*G_u ---*/
@@ -1178,13 +1162,10 @@ void COneShotFluidDriver::CalculateLagrangian(bool augmented){
 
   if(augmented){
     for (unsigned short iConstr = 0; iConstr < nConstr; iConstr++){
-      // Lagrangian += 0.5*MultiplierUpdate[iConstr]*MultiplierUpdate[iConstr];
-      // Lagrangian += 0.5*ConstrFunc[iConstr]*ConstrFunc[iConstr];
-      // Lagrangian += config_container[ZONE_0]->GetOneShotAlpha()/2.*ConstrFunc[iConstr]*ConstrFunc[iConstr];
-      Lagrangian += 1./(2.*BCheck_Norm)*ConstrFunc[iConstr]*ConstrFunc[iConstr];
+      Lagrangian += config_container[iZone]->GetOneShotGamma()/2.*ConstrFunc[iConstr]*ConstrFunc[iConstr];
     }
     for (iZone = 0; iZone < nZone; iZone++) {
-      Lagrangian+=solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->CalculateLagrangianPart(config_container[iZone], augmented);
+      Lagrangian += solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->CalculateLagrangianPart(config_container[iZone], augmented);
     }
   }
 
@@ -1308,7 +1289,6 @@ void COneShotFluidDriver::ComputeAlphaTerm(){
     /*--- Initialize the adjoint of the objective function with 0.0. ---*/
 
     SetAdj_ObjFunction_Zero();
-    // SetAdj_ConstrFunction(ConstrFunc);
     SetAdj_ConstrFunction_Zero();
 
     /*--- Interpret the stored information by calling the corresponding routine of the AD tool. ---*/
@@ -1393,9 +1373,9 @@ void COneShotFluidDriver::ComputePreconditioner(){
   for (iConstr = 0; iConstr < nConstr; iConstr++){
     seeding[iConstr] = 0.0;
   }
-  // su2double **BCheck = new su2double*[nConstr];
+  su2double **BCheck = new su2double*[nConstr];
   for (iConstr = 0; iConstr  < nConstr; iConstr++){
-    // BCheck[iConstr] = new su2double[nConstr];
+    BCheck[iConstr] = new su2double[nConstr];
     for (jConstr = 0; jConstr  < nConstr; jConstr++){
       BCheck[iConstr][jConstr] = 0.0;
     }
@@ -1469,10 +1449,10 @@ void COneShotFluidDriver::ComputePreconditioner(){
     BCheck_Inv[2][2]=bcheck*(BCheck[0][0]*BCheck[1][1]-BCheck[0][1]*BCheck[1][0]);
   }
 
-  // for (unsigned short iConstr = 0; iConstr  < nConstr; iConstr++){
-  //   delete [] BCheck[iConstr];
-  // }
-  // delete [] BCheck;
+  for (unsigned short iConstr = 0; iConstr  < nConstr; iConstr++){
+    delete [] BCheck[iConstr];
+  }
+  delete [] BCheck;
   delete [] seeding;
 }
 
@@ -1544,50 +1524,15 @@ void COneShotFluidDriver::SetConstrFunction(){
   }
 }
 
-void COneShotFluidDriver::StoreMultiplier(){
-  for(unsigned short iConstr = 0; iConstr < nConstr; iConstr++){
-    MultiplierOld[iConstr] = Multiplier[iConstr];
-  }
-}
-
-void COneShotFluidDriver::LoadMultiplier(){
-  for(unsigned short iConstr = 0; iConstr < nConstr; iConstr++){
-    Multiplier[iConstr] = MultiplierOld[iConstr];
-  }
-}
-
-void COneShotFluidDriver::UpdateMultiplier(su2double stepsize){
+void COneShotFluidDriver::UpdateMultiplier(){
   su2double helper, alpha = config_container[ZONE_0]->GetOneShotAlpha();
   for(unsigned short iConstr = 0; iConstr < nConstr; iConstr++){
-    /*--- BCheck*Multiplier ---*/
-    // helper = 0.0;
-    // for(unsigned short jConstr = 0; jConstr < nConstr; jConstr++){
-    //    helper+= BCheck[iConstr][jConstr]*Multiplier[jConstr];
-    // }
-    // MultiplierPre[iConstr] = helper;
-
     /*--- BCheck^(-1)*h ---*/
     helper = 0.0;
     for(unsigned short jConstr = 0; jConstr < nConstr; jConstr++){
        helper+= BCheck_Inv[iConstr][jConstr]*ConstrFunc_Store[jConstr];
     }
-    // MultiplierUpdate[iConstr] = helper*alpha*config_container[ZONE_0]->GetMultiplierScale(iConstr);
-    MultiplierUpdate[iConstr] = helper*config_container[ZONE_0]->GetMultiplierScale(iConstr);
-    Multiplier[iConstr] = Multiplier[iConstr] + MultiplierUpdate[iConstr];
-
-    // if (Multiplier[iConstr] * ConstrFunc_Store[iConstr] < 0.0) Multiplier[iConstr] = MultiplierUpdate[iConstr];
-    // if (Multiplier[iConstr] * ConstrFunc_Store[iConstr] < 0.0) Multiplier[iConstr] *= -1.0;
-
-    /*--- BCheck^(-T)*BCheck^(-1)*h ---*/
-    // helper = 0.0;
-    // for(unsigned short jConstr = 0; jConstr < nConstr; jConstr++){
-    //    helper+= BCheck_Inv[jConstr][iConstr]*MultiplierUpdate[jConstr];
-    // }
-    // /*--- BCheck*Multiplier ---*/
-    // for(unsigned short jConstr = 0; jConstr < nConstr; jConstr++){
-    //    helper+= BCheck[iConstr][jConstr]*Multiplier[jConstr];
-    // }
-    // MultiplierPre[iConstr] = helper;
+    Multiplier[iConstr] = Multiplier[iConstr] + helper*config_container[ZONE_0]->GetMultiplierScale(iConstr);
   }
 }
 
