@@ -106,9 +106,9 @@ COneShotFluidDriver::COneShotFluidDriver(char* confFile,
     for (unsigned short jConstr = 0; jConstr  < nConstr; jConstr++){
       BCheck_Inv[iConstr][jConstr] = 0.0;
     }
-    BCheck_Inv[iConstr][iConstr] = 1./config_container[ZONE_0]->GetBCheckEpsilon();
+    BCheck_Inv[iConstr][iConstr] = 1.0;
   }
-  BCheck_Norm = sqrt(nConstr*config_container[ZONE_0]->GetBCheckEpsilon()*config_container[ZONE_0]->GetBCheckEpsilon());
+  BCheck_Norm = sqrt(su2double(nConstr));
 
   for (unsigned short iBFGS = 0; iBFGS < nBFGSmax; iBFGS++){
     ykvec[iBFGS] = new su2double[nDV_Total];
@@ -1431,7 +1431,7 @@ void COneShotFluidDriver::ComputePreconditioner(){
   }
   if (nConstr == 1){
     if(BCheck[0][0] > 0.) {
-      BCheck_Norm = BCheck[0][0] - config_container[ZONE_0]->GetBCheckEpsilon();
+      BCheck_Norm = (BCheck[0][0] - config_container[ZONE_0]->GetBCheckEpsilon())/config_container[ZONE_0]->GetMultiplierScale(0);
       BCheck_Inv[0][0] = 1./BCheck[0][0];
     }
     else{
