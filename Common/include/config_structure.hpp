@@ -1085,20 +1085,16 @@ private:
   bool uq_permute;              /*!< \brief Permutation of eigenvectors */
 
   bool One_Shot; /*!< \brief option for one-shot optimization method */
+  bool One_Shot_Exact; /*!< \brief option for one-shot optimization method with exact descent */
   bool BFGS_Reset; /*!< \brief flag for reset of the Hessian to Identity in one-shot method */
-  bool Piggy_Back; /*!< \brief option for piggy-back method */
-  bool Quasi_Newton; /*!< \brief option for quasi-Newton method */
   unsigned long One_Shot_Start; /*!< \brief Start iteration for one-shot method */
   unsigned long One_Shot_Stop; /*!< \brief Stop iteration for one-shot method */
   su2double One_Shot_Alpha, One_Shot_Beta, One_Shot_Gamma; /*!< \brief factors for augmented Lagrangian in one-shot method */ 
   su2double One_Shot_FD; /*!< \brief Finite difference step-size for one-shot method */
   su2double OS_Design_Scale; /*!< \brief Value for scaling the design space */
   su2double Obj_Func_Scale; /*!< \brief Value for scaling the objective function */
-  su2double OS_Sens_Scale; /*!< \brief Value for scaling the geometry sensitivities */
   su2double DV_Bound; /*!< \brief Value for design variable lower and upper bound */
   bool OS_Check_Descent; /*!< \brief option for a descent check in the line search */
-  // bool OS_Lagrange; /*!< \brief option for a line search based on the design updated Lagrangian */
-  // bool OS_LS_PrimalDual; /*!< \brief option for a line search including the primal and dual update */
   unsigned short OS_LS_MaxCounter; /*!< \brief Maximum line search counter */
   unsigned short *Kind_ConstrFunc;  /*!< \brief Kind of constraint functions. */
   unsigned short nConstr, nConstrHelp;              /*! \brief Number of constraint functions. */
@@ -9184,16 +9180,10 @@ public:
   bool GetBoolOneShot(void);
 
   /*!
-   * \brief Check if the piggy-back option is specified in the config file.
-   * \return YES if piggy-back is enabled.
+   * \brief Check if the one-shot with exact descent option is specified in the config file.
+   * \return YES if exact one-shot is enabled.
    */
-  bool GetBoolPiggyBack(void);
-
-  /*!
-   * \brief Check if the quasi-Newton option is specified in the config file.
-   * \return YES if quasi-Newton method is enabled.
-   */
-  bool GetBoolQuasiNewton(void);
+  bool GetBoolOneShotExact(void);
 
   /*!
    * \brief Check if the Hessian reset is done using the identity matrix.
@@ -9257,12 +9247,6 @@ public:
    * \return Value for design space scaling
    */
   su2double GetDesignScale(void);
-
-  /*!
-   * \brief Get the value for scaling the geometry sensitivity (and as a result the design update).
-   * \return Value for sensitivity scaling
-   */
-  su2double GetSensScale(void);
 
   /*!
    * \brief Get the value for scaling the objective function.

@@ -14507,7 +14507,6 @@ void COutput::LoadLocalData_OneShot(CConfig *config, CGeometry *geometry, CSolve
   bool Wrt_Halo             = config->GetWrt_Halo(), isPeriodic;
 
   su2double *Aux_Sens = NULL;
-  su2double *Normal, Area;
   
   int *Local_Halo = NULL;
   

@@ -2065,9 +2065,7 @@ inline bool CConfig::GetUQ_Permute(void) { return uq_permute; }
 
 inline bool CConfig::GetBoolOneShot(void) { return One_Shot;}
 
-inline bool CConfig::GetBoolPiggyBack(void) { return Piggy_Back;}
-
-inline bool CConfig::GetBoolQuasiNewton(void) { return Quasi_Newton;}
+inline bool CConfig::GetBoolOneShotExact(void) { return One_Shot_Exact;}
 
 inline unsigned long CConfig::GetOneShotStart(void) { return One_Shot_Start; }
 
@@ -2084,8 +2082,6 @@ inline su2double CConfig::GetOneShotGamma(void) { return One_Shot_Gamma; }
 inline su2double CConfig::GetFDStep(void) { return One_Shot_FD; }
 
 inline su2double CConfig::GetDesignScale(void) { return OS_Design_Scale; }
-
-inline su2double CConfig::GetSensScale(void) { return OS_Sens_Scale; }
 
 inline su2double CConfig::GetObjScale(void) { return Obj_Func_Scale; }
 

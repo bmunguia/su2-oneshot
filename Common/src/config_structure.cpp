@@ -2442,11 +2442,8 @@ void CConfig::SetConfig_Options() {
   /*!\brief ONE_SHOT \n DESCRIPTION: Use one-shot method for optimization \ingroup Config*/
   addBoolOption("ONE_SHOT", One_Shot, false);
 
-  /*!\brief PIGGY_BACK \n DESCRIPTION: Make a piggy back iteration \ingroup Config*/
-  addBoolOption("PIGGY_BACK", Piggy_Back, false);
-
-  /*!\brief QUASI_NEWTON \n DESCRIPTION: Make a quasi-Newton optimization \ingroup Config*/
-  addBoolOption("QUASI_NEWTON", Quasi_Newton, false);
+  /*!\brief ONE_SHOT \n DESCRIPTION: Use one-shot method with exact descent for optimization \ingroup Config*/
+  addBoolOption("ONE_SHOT_EXACT_DESCENT", One_Shot_Exact, false);
 
   /*!\brief ONE_SHOT_START \n DESCRIPTION: Starting iteration of one-shot method \ingroup Config*/
   addUnsignedLongOption("ONE_SHOT_START", One_Shot_Start, 0);
@@ -2464,16 +2461,13 @@ void CConfig::SetConfig_Options() {
   addDoubleOption("ONE_SHOT_GAMMA", One_Shot_Gamma, 1.0);
 
   /*!\brief ONE_SHOT_FD \n DESCRIPTION: Finite difference step size for second additional term in augmented Lagrangian \ingroup Config*/
-  addDoubleOption("ONE_SHOT_FD", One_Shot_FD, 1E-6);
+  addDoubleOption("ONE_SHOT_FD_STEP", One_Shot_FD, 1E-6);
 
   /*!\brief DESIGN_SCALE \n DESCRIPTION: Scaling of design variables for optimization \ingroup Config*/
   addDoubleOption("DESIGN_SCALE", OS_Design_Scale, 1E-0);
 
   /*!\brief OBJ_SCALE \n DESCRIPTION: Scaling of objective function for optimization \ingroup Config*/
   addDoubleOption("OBJ_SCALE", Obj_Func_Scale, 1E-0);
-
-  /*!\brief SENS_SCALE \n DESCRIPTION: Scaling of sensitivities for optimization \ingroup Config*/
-  addDoubleOption("SENS_SCALE", OS_Sens_Scale, 1E-0);
 
   /*!\brief DV_BOUND \n DESCRIPTION: Lower and upper bound of design variables \ingroup Config*/
   addDoubleOption("ONE_SHOT_DV_BOUND", DV_Bound, 1E9);
@@ -2520,7 +2514,7 @@ void CConfig::SetConfig_Options() {
   /*!\brief OS_STEP_SIZE \n DESCRIPTION: Indicates if stepsize is set to zero if line search fails \ingroup Config*/
   addDoubleOption("ONE_SHOT_STEP_SIZE", Step_Size, 1.0);
 
-  addDoubleOption("BCHECK_EPSILON", BCheck_Epsilon, 1E-9);
+  addDoubleOption("BCHECK_EPSILON", BCheck_Epsilon, 1.0);
 
   addDoubleListOption("MULTIPLIER_SCALE", nConstrHelp, MultiplierScale);
 

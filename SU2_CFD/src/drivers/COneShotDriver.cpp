@@ -198,8 +198,10 @@ void COneShotFluidDriver::Preprocess(unsigned long TimeIter) {
 
 void COneShotFluidDriver::Run(){
 
- config_container[ZONE_0]->SetIntIter(TimeIter);
- RunOneShot();
+  config_container[ZONE_0]->SetIntIter(TimeIter);
+ 
+  if(config_container[ZONE_0]->GetBoolOneShotExact()) RunOneShotExact();
+  else                                                RunOneShotInexact();
 
   /*--- Screen output ---*/
   bool steady = (config_container[ZONE_0]->GetUnsteady_Simulation() == STEADY);
@@ -236,7 +238,7 @@ void COneShotFluidDriver::Run(){
 
 }
 
-void COneShotFluidDriver::RunOneShot(){
+void COneShotFluidDriver::RunOneShotExact(){
 
   su2double stepsize = config_container[ZONE_0]->GetStepSize();
   unsigned short maxcounter = config_container[ZONE_0]->GetOneShotMaxCounter();
@@ -351,9 +353,10 @@ void COneShotFluidDriver::RunOneShot(){
   UpdateMultiplier();
   PrimalDualStep();
 
-  /*--- Estimate Alpha and Beta ---*/
+  /*--- Estimate Alpha, Beta, and Gamma ---*/
   if(TimeIter > config_container[ZONE_0]->GetOneShotStart() && TimeIter > 2) {
-    solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->CalculateAlphaBetaGamma(config_container[ZONE_0], BCheck_Norm);
+    solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->CalculateAlphaBetaGamma(config_container[ZONE_0]);
+    solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->SetAlphaBetaGamma(config_container[ZONE_0], BCheck_Norm);
   }
 
   CalculateLagrangian(true);
@@ -420,6 +423,152 @@ void COneShotFluidDriver::RunOneShot(){
     if(TimeIter > config_container[ZONE_0]->GetOneShotStart()) BFGSUpdate(config_container[ZONE_0]);
 
     SetAugmentedLagrangianGradient();
+
+    /*--- Compute the search direction for the line search procedure ---*/
+    ComputeSearchDirection();
+
+    StoreLagrangianInformation();
+  }
+}
+
+void COneShotFluidDriver::RunOneShotInexact(){
+
+  su2double stepsize = config_container[ZONE_0]->GetStepSize();
+  unsigned short maxcounter = config_container[ZONE_0]->GetOneShotMaxCounter();
+  unsigned short whilecounter = 0;
+
+  /*--- Store the old solution and the old design for line search ---*/
+  for (iZone = 0; iZone < nZone; iZone++){
+    solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreSolution();
+    solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreMeshPoints(config_container[iZone], geometry_container[iZone][INST_0][MESH_0]);
+  }
+
+  /*--- This is the line search loop that is only called once, if no update is performed ---*/
+  do {
+
+    if(TimeIter>config_container[ZONE_0]->GetOneShotStart() && TimeIter<config_container[ZONE_0]->GetOneShotStop()){
+
+      if(whilecounter > 0){
+        //Armijo line search (halfen step)
+        stepsize=stepsize*0.5;
+
+        /*---Load the old design for line search---*/
+        for (iZone = 0; iZone < nZone; iZone++){
+          solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadMeshPoints(config_container[iZone], geometry_container[iZone][INST_0][MESH_0]);
+          grid_movement[iZone][INST_0]->UpdateDualGrid(geometry_container[iZone][INST_0][MESH_0], config_container[iZone]);
+        }
+      }
+      else{
+        UpdateMultiplier();
+      }
+
+      //Load the old solution for line search (either y_k or y_k-1)
+      for (iZone = 0; iZone < nZone; iZone++){
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadSolution();
+      }
+
+      /*--- Do a design update based on the search direction (mesh deformation with stepsize) ---*/
+      if (whilecounter!=maxcounter || (!config_container[ZONE_0]->GetZeroStep())) ComputeDesignVarUpdate(stepsize);
+      else ComputeDesignVarUpdate(0.0);
+
+      for (iZone = 0; iZone < nZone; iZone++){
+        config_container[iZone]->SetKind_SU2(SU2_DEF); // set SU2_DEF as the solver
+        SurfaceDeformation(geometry_container[iZone][INST_0][MESH_0], config_container[iZone], surface_movement[iZone], grid_movement[iZone][INST_0]);
+        config_container[iZone]->SetKind_SU2(SU2_CFD); // set SU2_CFD as the solver
+      }
+
+    }
+
+    /*--- Do a primal and adjoint update ---*/
+    PrimalDualStep();
+
+    /*--- Estimate Alpha, Beta, and Gamma ---*/
+    if(TimeIter > 2) solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->CalculateAlphaBetaGamma(config_container[ZONE_0]);
+
+    /*--- Calculate Lagrangian with old Alpha, Beta, and Gamma ---*/
+    CalculateLagrangian(true);
+
+    whilecounter++;
+
+  } while(TimeIter > config_container[ZONE_0]->GetOneShotStart() && 
+          TimeIter < config_container[ZONE_0]->GetOneShotStop() &&
+          (!CheckFirstWolfe()) && whilecounter<maxcounter+1);
+
+  /*--- Store FFD info in file ---*/
+  if (((config_container[ZONE_0]->GetDesign_Variable(0) == FFD_CONTROL_POINT_2D) ||
+       (config_container[ZONE_0]->GetDesign_Variable(0) == FFD_CONTROL_POINT))   &&
+       update) {
+    surface_movement[ZONE_0]->WriteFFDInfo(surface_movement, geometry_container[ZONE_0][INST_0], config_container, false);
+    config_container[ZONE_0]->SetMesh_FileName(config_container[ZONE_0]->GetMesh_Out_FileName());
+  }
+
+  if (!CheckFirstWolfe() && config_container[ZONE_0]->GetZeroStep()) stepsize = 0.0;
+
+  /*--- Calculate Lagrangian with new Alpha, Beta, and Gamma ---*/
+  if(TimeIter > 2) solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]->SetAlphaBetaGamma(config_container[ZONE_0], BCheck_Norm);
+  CalculateLagrangian(true);
+
+  if(TimeIter >= config_container[ZONE_0]->GetOneShotStart() && TimeIter < config_container[ZONE_0]->GetOneShotStop()){
+
+    /*--- Update design variable ---*/
+    UpdateDesignVariable();
+    StoreConstrFunction();
+
+    /*--- N_u ---*/
+    for (iZone = 0; iZone < nZone; iZone++){
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SaveSensitivity(geometry_container[iZone][INST_0][MESH_0]);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->StoreSaveSolution();
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->ResetSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0]);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],1.0);
+    }   
+
+    if((nConstr > 0) && (!config_container[ZONE_0]->GetConstPrecond())) ComputePreconditioner();
+
+    /*--- Gamma*h^T*h_u ---*/
+    if(nConstr > 0) {
+      ComputeGammaTerm();
+      for (iZone = 0; iZone < nZone; iZone++){
+        solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]->GetOneShotGamma());
+      }
+    }
+
+    /*--- Alpha*Deltay^T*G_u ---*/
+    ComputeAlphaTerm();
+    for (iZone = 0; iZone < nZone; iZone++){
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]->GetOneShotAlpha());
+    }
+
+    /*--- Beta*DeltaBary^T*N_yu ---*/
+    for (iZone = 0; iZone < nZone; iZone++){
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadSolution();
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateStateVariable(config_container[iZone]);
+    }
+    ComputeBetaTerm();
+    for (iZone = 0; iZone < nZone; iZone++){
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SetFiniteDifferenceSens(geometry_container[iZone][INST_0][MESH_0], config_container[iZone]);
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->UpdateSensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0],config_container[iZone]->GetOneShotBeta());
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->LoadSaveSolution();
+    }
+
+    /*--- Projection of the gradient N_u---*/
+    for (iZone = 0; iZone < nZone; iZone++){
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SetGeometrySensitivityGradient(geometry_container[iZone][INST_0][MESH_0]);
+    }
+    ProjectMeshSensitivities();
+    SetShiftedLagrangianGradient();
+
+    /*--- Projection of the gradient L_u---*/
+    for (iZone = 0; iZone < nZone; iZone++){
+      solver_container[iZone][INST_0][MESH_0][ADJFLOW_SOL]->SetGeometrySensitivityLagrangian(geometry_container[iZone][INST_0][MESH_0]); //Lagrangian
+    }
+    ProjectMeshSensitivities();
+    SetAugmentedLagrangianGradient();
+
+    /*--- Use N_u to compute the active set (bound constraints) ---*/
+    ComputeActiveSet(stepsize);
+
+    /*--- Do a BFGS update to approximate the inverse preconditioner ---*/
+    if(TimeIter > config_container[ZONE_0]->GetOneShotStart()) BFGSUpdate(config_container[ZONE_0]);
 
     /*--- Compute the search direction for the line search procedure ---*/
     ComputeSearchDirection();
@@ -1537,7 +1686,6 @@ void COneShotFluidDriver::UpdateMultiplier(){
        helper+= BCheck_Inv[iConstr][jConstr]*ConstrFunc_Store[jConstr];
     }
     Multiplier[iConstr] = Multiplier[iConstr] + helper*config_container[ZONE_0]->GetMultiplierScale(iConstr);
-    if(ConstrFunc_Store[iConstr] * Multiplier[iConstr] < 0.) Multiplier[iConstr] = helper*config_container[ZONE_0]->GetMultiplierScale(iConstr);
   }
 }
 

@@ -4426,7 +4426,12 @@ public:
   /*!
    * \brief A virtual member.
    */
-  virtual void CalculateAlphaBetaGamma(CConfig *config, su2double val_bcheck_norm);
+  virtual void CalculateAlphaBetaGamma(CConfig *config);
+
+  /*!
+   * \brief A virtual member.
+   */
+  virtual void SetAlphaBetaGamma(CConfig *config, su2double val_bcheck_norm);
 
   /*!
    * \brief A virtual member.
@@ -15800,9 +15805,14 @@ public:
   void StoreFormerSolution();
 
   /*!
-   * \brief Calculate estimates for alpha and beta of the doubly augmented Lagrangian
+   * \brief Calculate estimates for alpha, beta, and gamma of the doubly augmented Lagrangian
    */
-  void CalculateAlphaBetaGamma(CConfig *config, su2double val_bcheck_norm);
+  void CalculateAlphaBetaGamma(CConfig *config);
+
+  /*!
+   * \brief Store estimates for alpha, beta, and gamma of the doubly augmented Lagrangian
+   */
+  void SetAlphaBetaGamma(CConfig *config, su2double val_bcheck_norm);
 
   /*!
    * \brief Sets the adjoint values of the input variables of the flow (+turb.) iteration

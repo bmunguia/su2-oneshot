@@ -282,7 +282,7 @@ void COneShotSolver::LoadSaveSolution(){
   }
 }
 
-void COneShotSolver::CalculateAlphaBetaGamma(CConfig *config, su2double val_bcheck_norm){
+void COneShotSolver::CalculateAlphaBetaGamma(CConfig *config){
   unsigned short iVar;
   unsigned long iPoint;
   su2double helper=0.0,       myHelper=0.0;
@@ -310,7 +310,9 @@ void COneShotSolver::CalculateAlphaBetaGamma(CConfig *config, su2double val_bche
 
   rho = min(max(sqrt(normDeltaNew)/sqrt(normDelta), 0.9*rho), 0.999999); // Saturate contractivity
   theta = max(fabs(helper)/normDelta, 0.9*theta);
+}
 
+void COneShotSolver::SetAlphaBetaGamma(CConfig *config, su2double val_bcheck_norm){
   su2double alpha = 2.*theta/((1.-rho)*(1.-rho));
   su2double beta  = 2./theta;
   su2double gamma = 2./val_bcheck_norm;
@@ -318,7 +320,6 @@ void COneShotSolver::CalculateAlphaBetaGamma(CConfig *config, su2double val_bche
   config->SetOneShotAlpha(alpha);
   config->SetOneShotBeta(beta);
   config->SetOneShotGamma(gamma);
-
 }
 
 su2double COneShotSolver::CalculateLagrangianPart(CConfig *config, bool augmented){
