@@ -72,7 +72,8 @@ protected:
 
   su2double* ConstrFunc; /*!< \brief Constraint function values.*/
   su2double* Multiplier; /*!< \brief Lagrange multipliers for constraint functions.*/
-  su2double* ConstrFunc_Store; /*!< \brief Old Constraint function (stored when overwritten).*/
+  su2double* Multiplier_Old; /*!< \brief Old Lagrange multipliers for constraint functions.*/
+  su2double* ConstrFunc_Store; /*!< \brief Old constraint function (stored when overwritten).*/
   su2double** BCheck_Inv; /*!< \brief Inverse matrix for multiplier update.*/
   su2double  BCheck_Norm; /*!< \brief Norm of the matrix for multiplier update.*/
 
@@ -281,9 +282,24 @@ public:
   su2double ProjectionPAP(unsigned short iDV, unsigned short jDV, su2double value, bool active);
 
   /*!
+   * \brief Store the old constraint multiplier.
+   */
+  void StoreMultiplier();
+
+    /*!
+   * \brief Load the old constraint multiplier.
+   */
+  void LoadMultiplier();
+
+  /*!
    * \brief Update the constraint multiplier.
    */
-  void UpdateMultiplier();
+  void UpdateMultiplier(su2double stepsize);
+
+  /*!
+   * \brief Check the sign of the constraint multiplier.
+   */
+  void CheckMultiplier();
 
   /*!
    * \brief Set the constraint functions.

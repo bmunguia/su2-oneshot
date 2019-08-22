@@ -54,8 +54,8 @@ COneShotSolver::COneShotSolver(CGeometry *geometry, CConfig *config, CSolver *di
 
  DConsVec = new su2double** [nConstr];
  for (unsigned short iConstr=0; iConstr<nConstr;iConstr++){
-   DConsVec[iConstr] = new su2double* [nPoint];
-   for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
+   DConsVec[iConstr] = new su2double* [nPointDomain];
+   for (unsigned long iPoint = 0; iPoint < nPointDomain; iPoint++){
      DConsVec[iConstr][iPoint] = new su2double [nVar];
      for (unsigned short iVar = 0; iVar < nVar; iVar++){
        DConsVec[iConstr][iPoint][iVar]=0.0;
@@ -65,8 +65,8 @@ COneShotSolver::COneShotSolver(CGeometry *geometry, CConfig *config, CSolver *di
 }
 
 COneShotSolver::~COneShotSolver(void) {
-  for (unsigned short iConstr=0; iConstr<nConstr;iConstr++){
-    for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
+  for (unsigned short iConstr=0; iConstr < nConstr; iConstr++){
+    for (unsigned long iPoint = 0; iPoint < nPointDomain; iPoint++){
       delete [] DConsVec[iConstr][iPoint];
     }
     delete [] DConsVec[iConstr];
@@ -114,11 +114,8 @@ void COneShotSolver::SetRecording(CGeometry* geometry, CConfig *config){
 
 void COneShotSolver::SetGeometrySensitivityLagrangian(CGeometry *geometry){
 
-    unsigned short iDim, nDim, nPoint;
+    unsigned short iDim;
     unsigned long iPoint;
-
-    nPoint  = geometry->GetnPoint();
-    nDim          = geometry->GetnDim();
 
     geometry->InitializeSensitivity();
 
@@ -131,11 +128,8 @@ void COneShotSolver::SetGeometrySensitivityLagrangian(CGeometry *geometry){
 
 void COneShotSolver::SetGeometrySensitivityGradient(CGeometry *geometry){
 
-    unsigned short iDim, nDim, nPoint;
+    unsigned short iDim;
     unsigned long iPoint;
-
-    nPoint  = geometry->GetnPoint();
-    nDim    = geometry->GetnDim();
 
     geometry->InitializeSensitivity();
 
@@ -147,11 +141,8 @@ void COneShotSolver::SetGeometrySensitivityGradient(CGeometry *geometry){
 }
 
 void COneShotSolver::SaveSensitivity(CGeometry *geometry){
-    unsigned short iDim, nDim, nPoint;
+    unsigned short iDim;
     unsigned long iPoint;
-
-    nPoint  = geometry->GetnPoint();
-    nDim    = geometry->GetnDim();
 
     for (iPoint = 0; iPoint < nPoint; iPoint++) {
       for (iDim = 0; iDim < nDim; iDim++) {
@@ -161,11 +152,8 @@ void COneShotSolver::SaveSensitivity(CGeometry *geometry){
 }
 
 void COneShotSolver::ResetSensitivityLagrangian(CGeometry *geometry){
-    unsigned short iDim, nDim, nPoint;
+    unsigned short iDim;
     unsigned long iPoint;
-
-    nPoint  = geometry->GetnPoint();
-    nDim          = geometry->GetnDim();
 
     for (iPoint = 0; iPoint < nPoint; iPoint++) {
       for (iDim = 0; iDim < nDim; iDim++) {
@@ -175,11 +163,8 @@ void COneShotSolver::ResetSensitivityLagrangian(CGeometry *geometry){
 }
 
 void COneShotSolver::UpdateSensitivityLagrangian(CGeometry *geometry, su2double factor){
-    unsigned short iDim, nDim, nPoint;
+    unsigned short iDim;
     unsigned long iPoint;
-
-    nPoint  = geometry->GetnPoint();
-    nDim          = geometry->GetnDim();
 
     for (iPoint = 0; iPoint < nPoint; iPoint++) {
       for (iDim = 0; iDim < nDim; iDim++) {
@@ -191,7 +176,7 @@ void COneShotSolver::UpdateSensitivityLagrangian(CGeometry *geometry, su2double 
 void COneShotSolver::StoreMeshPoints(CConfig *config, CGeometry *geometry){
     unsigned long iVertex, jPoint;
     unsigned short iMarker;
-    for (jPoint=0; jPoint<geometry->GetnPoint();jPoint++){
+    for (jPoint=0; jPoint < nPoint; jPoint++){
         geometry->node[jPoint]->SetCoord_Old(geometry->node[jPoint]->GetCoord());
     }
     for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
@@ -205,7 +190,7 @@ void COneShotSolver::StoreMeshPoints(CConfig *config, CGeometry *geometry){
 void COneShotSolver::LoadMeshPoints(CConfig *config, CGeometry *geometry){
     unsigned long iVertex, jPoint;
     unsigned short iMarker;
-    for (jPoint=0; jPoint<geometry->GetnPoint();jPoint++){
+    for (jPoint=0; jPoint < nPoint; jPoint++){
         geometry->node[jPoint]->SetCoord(geometry->node[jPoint]->GetCoord_Old());
     }
     for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
@@ -285,7 +270,6 @@ void COneShotSolver::LoadSaveSolution(){
 void COneShotSolver::CalculateAlphaBetaGamma(CConfig *config){
   unsigned short iVar;
   unsigned long iPoint;
-  su2double helper=0.0,       myHelper=0.0;
   su2double normDelta=0.0,    myNormDelta=0.0;
   su2double normDeltaNew=0.0, myNormDeltaNew=0.0;
 
@@ -294,27 +278,24 @@ void COneShotSolver::CalculateAlphaBetaGamma(CConfig *config){
     for (iVar = 0; iVar < nVar; iVar++){
       myNormDelta += direct_solver->node[iPoint]->GetSolution_Delta(iVar)*direct_solver->node[iPoint]->GetSolution_Delta(iVar);
       myNormDeltaNew += (direct_solver->node[iPoint]->GetSolution(iVar)-direct_solver->node[iPoint]->GetSolution_Store(iVar))*(direct_solver->node[iPoint]->GetSolution(iVar)-direct_solver->node[iPoint]->GetSolution_Store(iVar));
-      myHelper += direct_solver->node[iPoint]->GetSolution_Delta(iVar)*(node[iPoint]->GetSolution(iVar)-node[iPoint]->GetSolution_Store(iVar))-node[iPoint]->GetSolution_Delta(iVar)*(direct_solver->node[iPoint]->GetSolution(iVar)-direct_solver->node[iPoint]->GetSolution_Store(iVar));
     }
   }
 
 #ifdef HAVE_MPI
   SU2_MPI::Allreduce(&myNormDelta, &normDelta, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   SU2_MPI::Allreduce(&myNormDeltaNew, &normDeltaNew, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&myHelper, &helper, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
   normDelta    = myNormDelta;
   normDeltaNew = myNormDeltaNew;
-  helper       = myHelper;
 #endif
 
-  rho = min(max(sqrt(normDeltaNew)/sqrt(normDelta), 0.9*rho), 0.999999); // Saturate contractivity
-  theta = max(fabs(helper)/normDelta, 0.9*theta);
+  rho = min(max(sqrt(normDeltaNew)/sqrt(normDelta), 0.9*rho), 0.9999); // Saturate contractivity
 }
 
 void COneShotSolver::SetAlphaBetaGamma(CConfig *config, su2double val_bcheck_norm){
-  su2double alpha = 2.*theta/((1.-rho)*(1.-rho));
-  su2double beta  = 2./theta;
+
+  su2double alpha = 2./((1.-rho)*(1.-rho));
+  su2double beta  = 2.;
   su2double gamma = 2./val_bcheck_norm;
 
   config->SetOneShotAlpha(alpha);
@@ -426,11 +407,8 @@ void COneShotSolver::UpdateStateVariable(CConfig *config){
 }
 
 void COneShotSolver::SetFiniteDifferenceSens(CGeometry *geometry, CConfig* config){
-    unsigned short iDim, nDim, nPoint;
+    unsigned short iDim;
     unsigned long iPoint;
-
-    nPoint  = geometry->GetnPoint();
-    nDim    = geometry->GetnDim();
 
     for (iPoint = 0; iPoint < nPoint; iPoint++) {
       for (iDim = 0; iDim < nDim; iDim++) {
@@ -457,7 +435,7 @@ void COneShotSolver::SetConstrDerivative(unsigned short iConstr){
   unsigned short iVar;
   unsigned long iPoint;
 
-  for (iPoint = 0; iPoint < nPoint; iPoint++){
+  for (iPoint = 0; iPoint < nPointDomain; iPoint++){
     for (iVar = 0; iVar < nVar; iVar++){
       DConsVec[iConstr][iPoint][iVar]=node[iPoint]->GetSolution(iVar);
     }

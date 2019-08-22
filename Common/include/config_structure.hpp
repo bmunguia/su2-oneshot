@@ -9334,6 +9334,11 @@ public:
   bool GetZeroStep(void);
 
   /*!
+   * \brief Set the initial value of the stepsize for line search
+   */
+  void SetStepSize(su2double val_step);
+
+  /*!
    * \brief Get the initial value of the stepsize for line search
    * \return Value of initial stepsize.
    */

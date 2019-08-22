@@ -2461,7 +2461,7 @@ void CConfig::SetConfig_Options() {
   addDoubleOption("ONE_SHOT_GAMMA", One_Shot_Gamma, 1.0);
 
   /*!\brief ONE_SHOT_FD \n DESCRIPTION: Finite difference step size for second additional term in augmented Lagrangian \ingroup Config*/
-  addDoubleOption("ONE_SHOT_FD_STEP", One_Shot_FD, 1E-6);
+  addDoubleOption("ONE_SHOT_FD_STEP", One_Shot_FD, 1E-5);
 
   /*!\brief DESIGN_SCALE \n DESCRIPTION: Scaling of design variables for optimization \ingroup Config*/
   addDoubleOption("DESIGN_SCALE", OS_Design_Scale, 1E-0);
@@ -2470,13 +2470,13 @@ void CConfig::SetConfig_Options() {
   addDoubleOption("OBJ_SCALE", Obj_Func_Scale, 1E-0);
 
   /*!\brief DV_BOUND \n DESCRIPTION: Lower and upper bound of design variables \ingroup Config*/
-  addDoubleOption("ONE_SHOT_DV_BOUND", DV_Bound, 1E9);
+  addDoubleOption("ONE_SHOT_DV_BOUND", DV_Bound, 1E+9);
 
   /*!\brief ONE_SHOT_CHECK_DESCENT \n DESCRIPTION: Indicates if the descent direction condition is checked in line search \ingroup Config*/
   addBoolOption("ONE_SHOT_CHECK_DESCENT", OS_Check_Descent, false);
 
   /*!\brief ONE_SHOT_LS_ITER \n DESCRIPTION: Maximum line search iterations in one-shot method \ingroup Config*/
-  addUnsignedShortOption("ONE_SHOT_LS_ITER", OS_LS_MaxCounter, 15);
+  addUnsignedShortOption("ONE_SHOT_LS_ITER", OS_LS_MaxCounter, 20);
 
   /*!\brief CONSTRAINT_FUNCTION \n DESCRIPTION: List of constraint functions \ingroup Config*/
   addEnumListOption("CONSTRAINT_FUNCTION", nConstr, Kind_ConstrFunc, Objective_Map);
@@ -2514,7 +2514,7 @@ void CConfig::SetConfig_Options() {
   /*!\brief OS_STEP_SIZE \n DESCRIPTION: Indicates if stepsize is set to zero if line search fails \ingroup Config*/
   addDoubleOption("ONE_SHOT_STEP_SIZE", Step_Size, 1.0);
 
-  addDoubleOption("BCHECK_EPSILON", BCheck_Epsilon, 1.0);
+  addDoubleOption("BCHECK_EPSILON", BCheck_Epsilon, 1E+1);
 
   addDoubleListOption("MULTIPLIER_SCALE", nConstrHelp, MultiplierScale);
 
