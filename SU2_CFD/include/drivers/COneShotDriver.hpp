@@ -115,14 +115,9 @@ public:
   void Run();
 
   /*!
-   * \brief Runs an optimization using the one-shot method (with ensured descent).
+   * \brief Runs an optimization using the one-shot method.
    */
-  void RunOneShotExact();
-
-  /*!
-   * \brief Runs an optimization using the one-shot method (without ensured descent but better convergence).
-   */
-  void RunOneShotInexact();
+  void RunOneShot();
 
   /*!
    * \brief Executes one primal and dual iteration (in a piggy-back manner).
