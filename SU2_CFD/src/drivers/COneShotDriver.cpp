@@ -461,9 +461,6 @@ void COneShotFluidDriver::RunOneShotInexact(){
         UpdateMultiplier(stepsize);
       }
       else{
-        /*--- Double initial step size for successful line search ---*/
-        // config_container[ZONE_0]->SetStepSize(min(1., 2.*config_container[ZONE_0]->GetStepSize()));
-
         /*--- Update constraint multiplier ---*/
         StoreMultiplier();
         UpdateMultiplier(1.0);
@@ -482,10 +479,7 @@ void COneShotFluidDriver::RunOneShotInexact(){
         LoadMultiplier();
         ComputeDesignVarUpdate(0.0);
       }
-
-      /*--- Halve initial step size for failed line search (note we already double at first line search iteration, so divide by 4) ---*/
-      // if (whilecounter == maxcounter) config_container[ZONE_0]->SetStepSize(max(pow(2.,-16.), 0.25*config_container[ZONE_0]->GetStepSize()));
-
+      
       for (iZone = 0; iZone < nZone; iZone++){
         config_container[iZone]->SetKind_SU2(SU2_DEF); // set SU2_DEF as the solver
         SurfaceDeformation(geometry_container[iZone][INST_0][MESH_0], config_container[iZone], surface_movement[iZone], grid_movement[iZone][INST_0]);
