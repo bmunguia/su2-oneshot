@@ -205,8 +205,8 @@ void COneShotFluidDriver::Run(){
 
   config_container[ZONE_0]->SetIntIter(TimeIter);
  
-  if(config_container[ZONE_0]->GetBoolOneShotExact()) RunOneShotExact();
-  else                                                RunOneShotInexact();
+  /*--- Run an iteration of the one-shot solver ---*/
+  RunOneShot();
 
   /*--- Screen output ---*/
   bool steady = (config_container[ZONE_0]->GetUnsteady_Simulation() == STEADY);
@@ -432,7 +432,7 @@ void COneShotFluidDriver::RunOneShotExact(){
   }
 }
 
-void COneShotFluidDriver::RunOneShotInexact(){
+void COneShotFluidDriver::RunOneShot(){
 
   su2double stepsize = config_container[ZONE_0]->GetStepSize();
   unsigned short maxcounter = config_container[ZONE_0]->GetOneShotMaxCounter();

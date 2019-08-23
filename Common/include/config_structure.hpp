@@ -1085,7 +1085,6 @@ private:
   bool uq_permute;              /*!< \brief Permutation of eigenvectors */
 
   bool One_Shot; /*!< \brief option for one-shot optimization method */
-  bool One_Shot_Exact; /*!< \brief option for one-shot optimization method with exact descent */
   bool BFGS_Reset; /*!< \brief flag for reset of the Hessian to Identity in one-shot method */
   unsigned long One_Shot_Start; /*!< \brief Start iteration for one-shot method */
   unsigned long One_Shot_Stop; /*!< \brief Stop iteration for one-shot method */
@@ -9180,12 +9179,6 @@ public:
   bool GetBoolOneShot(void);
 
   /*!
-   * \brief Check if the one-shot with exact descent option is specified in the config file.
-   * \return YES if exact one-shot is enabled.
-   */
-  bool GetBoolOneShotExact(void);
-
-  /*!
    * \brief Check if the Hessian reset is done using the identity matrix.
    * \return YES if identity matrix shall be used.
    */
@@ -9332,11 +9325,6 @@ public:
    * \return YES if stepsize is set to zero when line search does not work.
    */
   bool GetZeroStep(void);
-
-  /*!
-   * \brief Set the initial value of the stepsize for line search
-   */
-  void SetStepSize(su2double val_step);
 
   /*!
    * \brief Get the initial value of the stepsize for line search

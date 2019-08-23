@@ -2065,8 +2065,6 @@ inline bool CConfig::GetUQ_Permute(void) { return uq_permute; }
 
 inline bool CConfig::GetBoolOneShot(void) { return One_Shot;}
 
-inline bool CConfig::GetBoolOneShotExact(void) { return One_Shot_Exact;}
-
 inline unsigned long CConfig::GetOneShotStart(void) { return One_Shot_Start; }
 
 inline unsigned long CConfig::GetOneShotStop(void) { return One_Shot_Stop; }
@@ -2116,8 +2114,6 @@ inline bool CConfig::GetLimitedMemory(void) { return Limited_Memory_BFGS; }
 inline unsigned short CConfig::GetLimitedMemoryIter(void) { return LBFGS_Iter; }
 
 inline bool CConfig::GetZeroStep(void) { return Zero_Step; }
-
-inline void CConfig::SetStepSize(su2double val_step) { Step_Size = val_step; }
 
 inline su2double CConfig::GetStepSize(void) {return Step_Size; }
 

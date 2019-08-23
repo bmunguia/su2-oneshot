@@ -2442,9 +2442,6 @@ void CConfig::SetConfig_Options() {
   /*!\brief ONE_SHOT \n DESCRIPTION: Use one-shot method for optimization \ingroup Config*/
   addBoolOption("ONE_SHOT", One_Shot, false);
 
-  /*!\brief ONE_SHOT \n DESCRIPTION: Use one-shot method with exact descent for optimization \ingroup Config*/
-  addBoolOption("ONE_SHOT_EXACT_DESCENT", One_Shot_Exact, false);
-
   /*!\brief ONE_SHOT_START \n DESCRIPTION: Starting iteration of one-shot method \ingroup Config*/
   addUnsignedLongOption("ONE_SHOT_START", One_Shot_Start, 0);
 
